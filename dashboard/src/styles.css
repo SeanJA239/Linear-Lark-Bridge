@@ -703,6 +703,124 @@ button.signout {
   background: color-mix(in srgb, canvastext 8%, transparent);
 }
 
+.routing-map-section {
+  margin-bottom: 1.75rem;
+}
+
+.routing-map {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, canvastext 13%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, canvastext 2%, transparent);
+}
+
+.routing-map .react-flow__pane {
+  cursor: grab;
+}
+
+.routing-map .react-flow__pane:active {
+  cursor: grabbing;
+}
+
+.routing-map-node {
+  box-sizing: border-box;
+  display: grid;
+  gap: 0.22rem;
+  width: 11.5rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid color-mix(in srgb, canvastext 18%, transparent);
+  border-radius: 8px;
+  background: canvas;
+  color: canvastext;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+}
+
+.routing-map-node-source {
+  border-color: color-mix(in srgb, #2563eb 48%, transparent);
+}
+
+.routing-map-node-event {
+  border-color: color-mix(in srgb, #0891b2 45%, transparent);
+}
+
+.routing-map-node-rule {
+  border-color: color-mix(in srgb, #8b5cf6 42%, transparent);
+}
+
+.routing-map-node-default {
+  border-style: dashed;
+  border-color: color-mix(in srgb, #f59e0b 55%, transparent);
+}
+
+.routing-map-node-destination {
+  border-color: color-mix(in srgb, #16a34a 45%, transparent);
+}
+
+.routing-map-node-drop {
+  border-style: dashed;
+  border-color: color-mix(in srgb, #ef4444 50%, transparent);
+  opacity: 0.86;
+}
+
+.react-flow__node.selected .routing-map-node {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, canvastext 12%, transparent),
+    0 8px 22px rgba(0, 0, 0, 0.08);
+}
+
+.routing-map-node-label {
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.routing-map-node-subtitle {
+  overflow: hidden;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.66rem;
+  line-height: 1.25;
+  opacity: 0.58;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.routing-map-edge {
+  stroke: color-mix(in srgb, canvastext 52%, transparent);
+}
+
+.routing-map-edge.default {
+  stroke-dasharray: 6 5;
+}
+
+.routing-map .react-flow__edge-path {
+  stroke-width: 1.6;
+}
+
+.routing-map .react-flow__controls,
+.routing-map .routing-map-minimap {
+  border: 1px solid color-mix(in srgb, canvastext 14%, transparent);
+  background: canvas;
+  color: canvastext;
+  box-shadow: none;
+}
+
+.routing-map .react-flow__controls-button {
+  border-bottom-color: color-mix(in srgb, canvastext 12%, transparent);
+  background: canvas;
+  color: canvastext;
+}
+
+.routing-map .react-flow__controls-button:hover {
+  background: color-mix(in srgb, canvastext 7%, transparent);
+}
+
+.routing-map .react-flow__minimap-mask {
+  fill: color-mix(in srgb, canvastext 12%, transparent);
+}
+
 .routing-section + .routing-section {
   margin-top: 1.75rem;
 }

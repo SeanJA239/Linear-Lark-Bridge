@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router";
 import { SWRConfig } from "swr";
 import { App } from "./App.tsx";
 import { swrConfig } from "./lib/http.ts";
+import "@xyflow/react/dist/style.css";
 import "./styles.css";
 
 const root = document.getElementById("root");

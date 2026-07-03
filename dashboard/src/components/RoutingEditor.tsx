@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { errMessage, mutateRequest } from "../lib/http";
+import { RoutingMap } from "./RoutingMap";
 import { Select } from "./Select";
 import { Spinner } from "./Spinner";
 
@@ -80,6 +81,8 @@ export interface RoutingEditorProps {
   /** Show the alert-labels section (default `true`). Unused by apps without
    * label-triggered alerts (e.g. Linear). */
   showAlertLabels?: boolean;
+  /** Show the read-only routing map preview (default `false`). */
+  showRoutingMap?: boolean;
 }
 
 export function RoutingEditor({
@@ -87,6 +90,7 @@ export function RoutingEditor({
   eventOptions,
   showUserMap = true,
   showAlertLabels = true,
+  showRoutingMap = false,
 }: RoutingEditorProps) {
   const url = `/api/apps/${appName}/routing`;
   const { data, error, mutate } = useSWR<RoutingConfig>(url);
@@ -195,6 +199,24 @@ export function RoutingEditor({
         users, or type a <code>chat_id</code> / email. Changes apply live, no
         restart. Delivery needs a bound <code>lark_app</code> bot.
       </p>
+
+      {showRoutingMap && (
+        <section className="routing-section routing-map-section">
+          <div className="routing-section-head">
+            <span className="routing-section-title">Routing map</span>
+            <span className="routing-section-hint">
+              current rules rendered as event → rule → destination paths
+            </span>
+          </div>
+          <RoutingMap
+            appName={appName}
+            routing={edit}
+            eventOptions={eventOptions}
+            chats={chats}
+            users={users}
+          />
+        </section>
+      )}
 
       {/* ── Rules ── */}
       <section className="routing-section">

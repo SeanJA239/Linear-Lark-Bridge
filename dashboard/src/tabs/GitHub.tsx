@@ -14,7 +14,11 @@ export function GitHub() {
     <section>
       <h2>GitHub</h2>
       <LarkBinding appName="github" />
-      <RoutingEditor appName="github" eventOptions={GITHUB_EVENTS} />
+      <RoutingEditor
+        appName="github"
+        eventOptions={GITHUB_EVENTS}
+        showRoutingMap
+      />
     </section>
   );
 }

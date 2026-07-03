@@ -486,6 +486,7 @@ export function Linear() {
         eventOptions={LINEAR_EVENTS}
         showUserMap={false}
         showAlertLabels={false}
+        showRoutingMap
       />
       <SettingsCard />
       <UserMapCard />
