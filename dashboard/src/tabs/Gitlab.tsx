@@ -1,7 +1,8 @@
 import { LarkBinding } from "../components/LarkBinding";
-import { type EventOption, RoutingEditor } from "../components/RoutingEditor";
+import { RoutingMapPanel } from "../components/RoutingMapPanel";
+import type { RoutingGraphEventOption } from "../components/routingGraph";
 
-const GITLAB_EVENTS: EventOption[] = [
+const GITLAB_EVENTS: RoutingGraphEventOption[] = [
   { value: "merge_request", label: "Merge requests" },
   { value: "issue", label: "Issues (alert labels)" },
   { value: "pipeline", label: "Pipeline failures" },
@@ -14,7 +15,7 @@ export function Gitlab() {
     <section>
       <h2>GitLab</h2>
       <LarkBinding appName="gitlab" />
-      <RoutingEditor appName="gitlab" eventOptions={GITLAB_EVENTS} />
+      <RoutingMapPanel appName="gitlab" eventOptions={GITLAB_EVENTS} />
     </section>
   );
 }

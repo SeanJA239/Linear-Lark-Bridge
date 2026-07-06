@@ -7,15 +7,16 @@ import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { Checkbox } from "../components/Checkbox";
 import { LarkBinding } from "../components/LarkBinding";
-import { type EventOption, RoutingEditor } from "../components/RoutingEditor";
+import { RoutingMapPanel } from "../components/RoutingMapPanel";
 import { Select } from "../components/Select";
+import type { RoutingGraphEventOption } from "../components/routingGraph";
 import { errMessage, mutateRequest } from "../lib/http";
 
 type Feedback = { tone: "ok" | "error"; text: string } | null;
 
 // Linear routes by team key (the identifier prefix, e.g. `ENG`); a `*` rule or a
 // default destination catches everything.
-const LINEAR_EVENTS: EventOption[] = [
+const LINEAR_EVENTS: RoutingGraphEventOption[] = [
   { value: "issue", label: "Issues (create / update)" },
   { value: "comment", label: "Comments" },
 ];
@@ -481,13 +482,7 @@ export function Linear() {
     <section>
       <h2>Linear</h2>
       <LarkBinding appName="linear" />
-      <RoutingEditor
-        appName="linear"
-        eventOptions={LINEAR_EVENTS}
-        showUserMap={false}
-        showAlertLabels={false}
-        showRoutingMap
-      />
+      <RoutingMapPanel appName="linear" eventOptions={LINEAR_EVENTS} />
       <SettingsCard />
       <UserMapCard />
     </section>
