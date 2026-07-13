@@ -10,6 +10,12 @@
    window (a lifted, hairline-bordered panel inset from the viewport edges).
    ──────────────────────────────────────────────────────────────────────────── */
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   /* Brand */
   --primary: #5e6ad2;
@@ -85,7 +91,6 @@ body {
 .app {
   display: flex;
   height: 100dvh;
-  box-sizing: border-box;
   /* Base UI: own stacking context so popups layer above the app. */
   isolation: isolate;
 }
@@ -93,7 +98,6 @@ body {
 .sidebar {
   flex: none;
   width: 220px;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -287,6 +291,19 @@ button.signout:hover {
 
   .content-inner {
     padding: 1.25rem 1.1rem 3rem;
+  }
+
+  /* Form rows collapse to label-above-control; the error follows the control. */
+  .field {
+    grid-template-columns: 1fr;
+  }
+
+  .field > * {
+    min-width: 0;
+  }
+
+  .field-error {
+    grid-column: 1;
   }
 }
 
@@ -495,6 +512,7 @@ a {
 .filters {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 1rem;
   font-size: 0.84rem;
 }
@@ -579,6 +597,7 @@ a {
 .log .fields {
   font-size: 0.74rem;
   color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
 /* ─── Config editor ─────────────────────────────────────────────────────────── */
@@ -962,7 +981,6 @@ textarea.setup-admins {
    padding alone fixes its left/right rest positions (translateX only animates). */
 .switch {
   position: relative;
-  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   width: 2.1rem;
