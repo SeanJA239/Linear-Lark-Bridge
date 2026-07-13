@@ -4,8 +4,6 @@ GitLab project-webhook → Lark notification integration. Receives GitLab webhoo
 console port and delivers Lark cards to **console-configured routing destinations** (group
 chats / DMs), plus DMs to merge-request reviewers.
 
-This file is `AGENTS.md`; `CLAUDE.md` is a symlink to it — edit `AGENTS.md`.
-
 ## Layout (flat, github-style — no DB, no scheduler, no API client)
 
 - `app.rs` — `App`/`Instance`; `build()` parses config (requires an auth secret) and threads

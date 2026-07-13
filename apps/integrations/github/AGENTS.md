@@ -4,8 +4,6 @@ GitHub webhook → Lark notification integration. Receives GitHub webhooks on th
 port and delivers Lark cards to **console-configured routing destinations** (group chats /
 DMs), plus DMs to PR reviewers.
 
-This file is `AGENTS.md`; `CLAUDE.md` is a symlink to it — edit `AGENTS.md`.
-
 ## Layout (flat — no DB, no scheduler)
 
 - `app.rs` — `App`/`Instance`; `build()` requires `webhook_secret` and threads the
