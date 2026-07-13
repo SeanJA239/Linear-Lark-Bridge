@@ -21,6 +21,15 @@ pub fn update_linear_schema() -> Result<()> {
     Ok(())
 }
 
+pub fn dump_openapi() -> Result<()> {
+    let dest = workspace_root().join("dashboard/openapi.json");
+    let mut spec = larkstack::openapi_json();
+    spec.push('\n');
+    write_atomic(&dest, spec.as_bytes())?;
+    println!("updated {}", dest.display());
+    Ok(())
+}
+
 fn workspace_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()

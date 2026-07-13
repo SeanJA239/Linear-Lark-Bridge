@@ -11,12 +11,42 @@ use axum::{
 use futures_util::stream::{Stream, StreamExt};
 use serde::Deserialize;
 use tokio_stream::wrappers::{BroadcastStream, errors::BroadcastStreamRecvError};
-use utoipa::IntoParams;
+use utoipa::{IntoParams, ToSchema};
 
 use crate::HostState;
 
 /// How many historical events to replay before streaming live ones.
 const BACKFILL_LIMIT: usize = 200;
+
+/// Wire shape of one SSE `data` payload — mirrors [`larkstack_core::Event`]'s
+/// serde output, declared here so the schema lands in the OpenAPI spec without
+/// `larkstack-core` depending on `utoipa`. Never constructed: the handler
+/// serializes the core event directly.
+#[derive(ToSchema)]
+#[schema(as = Event)]
+#[allow(dead_code)]
+pub(crate) struct EventWire {
+    id: u64,
+    level: LevelWire,
+    subsystem: Option<String>,
+    target: String,
+    message: String,
+    fields: serde_json::Map<String, serde_json::Value>,
+    /// Unix milliseconds.
+    timestamp: u64,
+}
+
+/// Mirrors [`larkstack_core::Level`]'s lowercase serde encoding.
+#[derive(ToSchema)]
+#[schema(as = Level, rename_all = "lowercase")]
+#[allow(dead_code)]
+pub(crate) enum LevelWire {
+    Trace,
+    Debug,
+    Info,
+    Warn,
+    Error,
+}
 
 #[derive(Deserialize, IntoParams)]
 #[into_params(parameter_in = Query)]
@@ -32,14 +62,14 @@ pub(crate) struct EventsQuery {
 /// `{ id, level, subsystem, target, message, fields, timestamp }`. A `lagged`
 /// event signals the client fell behind and some events were dropped.
 #[utoipa::path(
-    get, path = "/events", tag = "console",
+    get, path = "/events", operation_id = "stream_events", tag = "console",
     security(("session" = [])),
     params(EventsQuery),
     responses((
         status = 200,
-        description = "SSE stream of console events",
+        description = "SSE stream of console events; each message's `data` is one JSON `Event`",
         content_type = "text/event-stream",
-        body = Object,
+        body = EventWire,
     )),
 )]
 pub(crate) async fn events(

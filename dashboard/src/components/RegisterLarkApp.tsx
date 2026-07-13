@@ -2,28 +2,16 @@ import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { mutate } from "swr";
-import useSWRMutation from "swr/mutation";
-import { errMessage, mutateRequest } from "../lib/http";
-
-export interface LarkAppRow {
-  name: string;
-  app_id: string;
-  base_url: string;
-  has_secret: boolean;
-}
+import { invalidate, TAG_LARK_APPS } from "../lib/cache";
+import { errMessage } from "../lib/errors";
+import { useMutation } from "../lib/tayori";
+import { type LarkAppView, testLarkApp, upsertLarkApp } from "../sdk";
 
 interface LarkAppForm {
   name: string;
   app_id: string;
   app_secret: string;
   base_url: string;
-}
-
-interface TestResult {
-  ok: boolean;
-  expire?: number;
-  error?: string;
 }
 
 type Feedback = { tone: "ok" | "error"; text: string } | null;
@@ -47,7 +35,7 @@ function creds(form: LarkAppForm) {
 
 interface Props {
   /// When set, the form edits an existing entry (name readonly, prefilled).
-  editing?: LarkAppRow | null;
+  editing?: LarkAppView | null;
   /// Called after a successful save with the saved entry name.
   onSaved?: (name: string) => void;
   /// Called when the user abandons an in-progress edit.
@@ -83,24 +71,16 @@ export function RegisterLarkApp({ editing, onSaved, onCancelEdit }: Props) {
     setFeedback(null);
   }, [editing, reset]);
 
-  const save = useSWRMutation(
-    "/api/lark-apps",
-    (url: string, { arg }: { arg: LarkAppForm }) =>
-      mutateRequest(url, { json: { name: arg.name.trim(), ...creds(arg) } }),
-    { onSuccess: () => mutate("/api/lark-apps") },
-  );
+  const save = useMutation(upsertLarkApp, {
+    onSuccess: () => void invalidate(TAG_LARK_APPS),
+  });
   // Dry-run: answers 200 `{ ok:false }` on bad creds, so it is read, not thrown.
-  const test = useSWRMutation(
-    "/api/lark-apps/test",
-    (url: string, { arg }: { arg: LarkAppForm }) =>
-      mutateRequest<TestResult>(url, { json: creds(arg) }),
-    { revalidate: false, populateCache: false },
-  );
+  const test = useMutation(testLarkApp);
 
   const onSave = handleSubmit(async (form) => {
     setFeedback(null);
     try {
-      await save.trigger(form);
+      await save.trigger({ body: { name: form.name.trim(), ...creds(form) } });
       const name = form.name.trim();
       setFeedback({ tone: "ok", text: `saved "${name}"` });
       if (!editing) reset(EMPTY);
@@ -123,11 +103,11 @@ export function RegisterLarkApp({ editing, onSaved, onCancelEdit }: Props) {
       return;
     }
     try {
-      const r = await test.trigger(form);
+      const r = await test.trigger({ body: creds(form) });
       setFeedback(
-        r?.ok
+        r.ok
           ? { tone: "ok", text: `valid — token good for ${r.expire ?? "?"}s` }
-          : { tone: "error", text: r?.error ?? "credential test failed" },
+          : { tone: "error", text: r.error ?? "credential test failed" },
       );
     } catch (e) {
       setFeedback({ tone: "error", text: errMessage(e) });

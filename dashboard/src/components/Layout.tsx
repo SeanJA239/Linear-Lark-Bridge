@@ -1,7 +1,9 @@
 import { Button } from "@base-ui/react/button";
 import { Tabs } from "@base-ui/react/tabs";
 import { Link, Outlet, useLocation } from "react-router";
-import { logout, useMe } from "../lib/auth";
+import { revalidateMe, useMe } from "../lib/auth";
+import { useMutation } from "../lib/tayori";
+import { logout } from "../sdk";
 import { OpenConsoleBanner } from "./OpenConsoleBanner";
 
 // Top-level navigation. The per-app pages (Linear/GitHub/GitLab/X/Standup/
@@ -24,6 +26,17 @@ export function Layout() {
   const current = TABS.find((t) => pathname.startsWith(t.to))?.to ?? "/status";
   const { me } = useMe();
   const who = me?.user?.name || me?.user?.email;
+  const signOut = useMutation(logout);
+
+  // End the session, then re-probe /auth/me so the UI returns to login. A
+  // failed logout still re-probes — the gate decides what state we're in.
+  const onSignOut = async () => {
+    try {
+      await signOut.trigger({});
+    } finally {
+      void revalidateMe();
+    }
+  };
 
   return (
     <div className="app">
@@ -54,7 +67,8 @@ export function Layout() {
             <Button
               className="signout"
               type="button"
-              onClick={() => logout()}
+              onClick={onSignOut}
+              disabled={signOut.isMutating}
               title="Sign out"
             >
               sign out

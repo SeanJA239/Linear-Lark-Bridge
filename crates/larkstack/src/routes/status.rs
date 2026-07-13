@@ -21,7 +21,7 @@ use crate::HostState;
 
 /// `GET /api/status` — latest liveness of every supervised subsystem.
 #[utoipa::path(
-    get, path = "/status", tag = "console",
+    get, path = "/status", operation_id = "get_status", tag = "console",
     security(("session" = [])),
     responses((status = 200, description = "Per-subsystem status snapshot", body = StatusResponse)),
 )]
@@ -37,7 +37,7 @@ pub(crate) async fn status(State(s): State<HostState>) -> Json<StatusResponse> {
 
 /// `GET /api/apps` — registered App manifests, for generic UI rendering.
 #[utoipa::path(
-    get, path = "/apps", tag = "console",
+    get, path = "/apps", operation_id = "list_apps", tag = "console",
     security(("session" = [])),
     responses((status = 200, description = "Registered app manifests", body = AppsResponse)),
 )]

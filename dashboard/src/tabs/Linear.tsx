@@ -3,32 +3,32 @@ import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
 import { useEffect, useState } from "react";
 import { type Control, Controller, useForm } from "react-hook-form";
-import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
 import { Checkbox } from "../components/Checkbox";
 import { LarkBinding } from "../components/LarkBinding";
 import { RoutingEditor } from "../components/RoutingEditor";
 import { Select } from "../components/Select";
-import { errMessage, mutateRequest } from "../lib/http";
+import {
+  invalidate,
+  TAG_LINEAR_SETTINGS,
+  TAG_LINEAR_USER_MAP,
+} from "../lib/cache";
+import { errMessage } from "../lib/errors";
+import {
+  deleteUserMap,
+  getLinearSettings,
+  type LinearSettings,
+  listUserMap,
+  putLinearSettings,
+  upsertUserMap,
+} from "../lib/linear-api";
+import { useData, useMutation } from "../lib/tayori";
 
 type Feedback = { tone: "ok" | "error"; text: string } | null;
 
 // ── Settings ───────────────────────────────────────────────────────────────
 
-interface SettingsWire {
-  subscriber_on_comment: boolean;
-  subscriber_on_status_change: boolean;
-  subscriber_on_any_update: boolean;
-  reminders_enabled: boolean;
-  reminder_recipients: string;
-  reminder_lead_days: number[];
-  reminder_overdue_max_days: number;
-  reminder_check_interval_hours: number;
-  reminder_timezone: string;
-}
-
 // The form mirrors the wire shape but holds lead-days as an editable CSV string.
-interface SettingsForm extends Omit<SettingsWire, "reminder_lead_days"> {
+interface SettingsForm extends Omit<LinearSettings, "reminder_lead_days"> {
   reminder_lead_days: string;
 }
 
@@ -44,11 +44,11 @@ const DEFAULT_FORM: SettingsForm = {
   reminder_timezone: "UTC",
 };
 
-function wireToForm(w: SettingsWire): SettingsForm {
+function wireToForm(w: LinearSettings): SettingsForm {
   return { ...w, reminder_lead_days: w.reminder_lead_days.join(", ") };
 }
 
-function formToWire(f: SettingsForm): SettingsWire {
+function formToWire(f: SettingsForm): LinearSettings {
   return {
     subscriber_on_comment: f.subscriber_on_comment,
     subscriber_on_status_change: f.subscriber_on_status_change,
@@ -101,9 +101,9 @@ function CheckboxField({
 }
 
 function SettingsCard() {
-  const { data, error, mutate } = useSWR<SettingsWire>(
-    "/api/apps/linear/settings",
-  );
+  const { data, error } = useData(getLinearSettings, {
+    cacheTags: [TAG_LINEAR_SETTINGS],
+  });
   const { register, handleSubmit, reset, control } = useForm<SettingsForm>({
     defaultValues: DEFAULT_FORM,
   });
@@ -114,21 +114,14 @@ function SettingsCard() {
     if (data) reset(wireToForm(data));
   }, [data, reset]);
 
-  const save = useSWRMutation(
-    "/api/apps/linear/settings",
-    (url: string, { arg }: { arg: SettingsWire }) =>
-      mutateRequest<SettingsWire>(url, { method: "PUT", json: arg }),
-    {
-      onSuccess: (saved) => {
-        if (saved) void mutate(saved, { revalidate: false });
-      },
-    },
-  );
+  const save = useMutation(putLinearSettings, {
+    onSuccess: () => void invalidate(TAG_LINEAR_SETTINGS),
+  });
 
   const onSave = handleSubmit(async (form) => {
     setFeedback(null);
     try {
-      await save.trigger(formToWire(form));
+      await save.trigger({ body: formToWire(form) });
       setFeedback({ tone: "ok", text: "settings saved" });
     } catch (e) {
       setFeedback({ tone: "error", text: errMessage(e) });
@@ -138,7 +131,9 @@ function SettingsCard() {
   return (
     <div className="action-card">
       <div className="actions-subsystem">behavior settings</div>
-      {error && <p className="error">Failed to load: {errMessage(error)}</p>}
+      {error !== undefined && (
+        <p className="error">Failed to load: {errMessage(error)}</p>
+      )}
 
       <p className="muted help-text">
         Subscriber fan-out &amp; due-date reminders need{" "}
@@ -251,15 +246,6 @@ function SettingsCard() {
 
 // ── User map ─────────────────────────────────────────────────────────────────
 
-interface Mapping {
-  linear_email: string;
-  lark_email: string;
-  lark_open_id: string | null;
-  note: string | null;
-  updated_by: string | null;
-  updated_at: number;
-}
-
 interface MappingForm {
   linear_email: string;
   lark_email: string;
@@ -273,10 +259,9 @@ const EMPTY_MAPPING: MappingForm = {
 };
 
 function UserMapCard() {
-  const { data, error, mutate } = useSWR<Mapping[]>(
-    "/api/apps/linear/user-map",
-  );
-  const rows = data;
+  const { data: rows, error } = useData(listUserMap, {
+    cacheTags: [TAG_LINEAR_USER_MAP],
+  });
 
   const {
     register,
@@ -287,31 +272,23 @@ function UserMapCard() {
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [target, setTarget] = useState<string | null>(null);
 
-  const save = useSWRMutation(
-    "/api/apps/linear/user-map",
-    (url: string, { arg }: { arg: MappingForm }) =>
-      mutateRequest(url, {
-        json: {
-          linear_email: arg.linear_email.trim(),
-          lark_email: arg.lark_email.trim(),
-          note: arg.note.trim() || null,
-        },
-      }),
-    { onSuccess: () => mutate() },
-  );
-  const remove = useSWRMutation(
-    "/api/apps/linear/user-map",
-    (_url: string, { arg }: { arg: string }) =>
-      mutateRequest(`/api/apps/linear/user-map/${encodeURIComponent(arg)}`, {
-        method: "DELETE",
-      }),
-    { onSuccess: () => mutate() },
-  );
+  const save = useMutation(upsertUserMap, {
+    onSuccess: () => void invalidate(TAG_LINEAR_USER_MAP),
+  });
+  const remove = useMutation(deleteUserMap, {
+    onSuccess: () => void invalidate(TAG_LINEAR_USER_MAP),
+  });
 
   const onSave = handleSubmit(async (form) => {
     setFeedback(null);
     try {
-      await save.trigger(form);
+      await save.trigger({
+        body: {
+          linear_email: form.linear_email.trim(),
+          lark_email: form.lark_email.trim(),
+          note: form.note.trim() || null,
+        },
+      });
       setFeedback({ tone: "ok", text: `mapped ${form.linear_email.trim()}` });
       reset(EMPTY_MAPPING);
     } catch (e) {
@@ -323,7 +300,7 @@ function UserMapCard() {
     if (!target) return;
     setFeedback(null);
     try {
-      await remove.trigger(target);
+      await remove.trigger({ path: { linear_email: target } });
     } catch (e) {
       setFeedback({ tone: "error", text: errMessage(e) });
     } finally {
@@ -393,7 +370,9 @@ function UserMapCard() {
         )}
       </div>
 
-      {error && <p className="error">Failed to load: {errMessage(error)}</p>}
+      {error !== undefined && (
+        <p className="error">Failed to load: {errMessage(error)}</p>
+      )}
       {rows && rows.length > 0 && (
         <table style={{ marginTop: "1.5rem" }}>
           <thead>

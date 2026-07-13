@@ -1,0 +1,1405 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "larkstack console API",
+    "description": "Admin API for the larkstack host: subsystem status, live config, an event stream (SSE), the Lark-app registry, action dispatch, and Lark OAuth login.",
+    "contact": {
+      "name": "S3anJia"
+    },
+    "license": {
+      "name": "MIT OR Apache-2.0",
+      "identifier": "MIT OR Apache-2.0"
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/actions/{app}/{action}": {
+      "post": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`POST /api/actions/{app}/{action}` — fire-and-forget an App action. The\nresult string from `Instance::handle_action` surfaces on the event stream,\nnot in this response.",
+        "operationId": "dispatch_action",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "description": "Registered app name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "description": "Action name from the app's manifest",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Optional action parameters (JSON object)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Action dispatched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionAck"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown app",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "App is not running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/api/apps": {
+      "get": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`GET /api/apps` — registered App manifests, for generic UI rendering.",
+        "operationId": "list_apps",
+        "responses": {
+          "200": {
+            "description": "Registered app manifests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/api/config": {
+      "get": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`GET /api/config` — the current `config.toml`, verbatim.",
+        "operationId": "get_config",
+        "responses": {
+          "200": {
+            "description": "Current config.toml",
+            "content": {
+              "application/toml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`PUT /api/config` — validate, persist, and broadcast a replacement config.\nOnly the apps whose change key moved are restarted.",
+        "operationId": "put_config",
+        "requestBody": {
+          "description": "Full replacement config.toml",
+          "content": {
+            "application/toml": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Saved; affected apps restart",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Body is not valid TOML",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not write the config file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/api/config/{app}/enabled": {
+      "put": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`PUT /api/config/{app}/enabled` — flip whether the supervisor runs an app,\nwriting just `[<app>].enabled` and leaving the rest of the config (comments\nand all) untouched. A one-field affordance over the raw TOML editor for the\nmost common config edit; the affected app (re)starts or stops on broadcast.",
+        "operationId": "set_app_enabled",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "description": "Registered app name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnabledReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Flag set; the app starts or stops",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnabledAck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "That config section is not a table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such registered app",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not write the config file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/api/config/{app}/lark-app": {
+      "put": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`PUT /api/config/{app}/lark-app` — bind (or clear) the `[lark-apps.<name>]`\nan app uses for Lark credentials, writing just `[<app>].lark_app` and leaving\nthe rest of the config untouched. A one-field affordance over the raw TOML\neditor; the affected app restarts on broadcast and resolves the new binding.\nA non-empty value must name a registered Lark app, else the app would fail\nits next build — so we reject it up front.",
+        "operationId": "set_app_lark_app",
+        "parameters": [
+          {
+            "name": "app",
+            "in": "path",
+            "description": "Registered app name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LarkAppReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Binding set (or cleared); the app restarts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LarkAppAck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "lark_app is not a registered Lark app, or the section is not a table",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such registered app",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not write the config file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/api/console-auth": {
+      "get": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`GET /api/console-auth` — the current console sign-in binding.",
+        "operationId": "get_console_auth",
+        "responses": {
+          "200": {
+            "description": "Console sign-in binding",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsoleAuthView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`PUT /api/console-auth` — bind a Lark app as the console's OAuth client.\nSaving this enforces sign-in on the next request, so the bound app must\nalready carry working credentials in the registry (else the console would\nsilently stay open).",
+        "operationId": "put_console_auth",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BindReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Binding saved; sign-in now required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "lark_app is not a registered app with credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not write the config file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`DELETE /api/console-auth` — unbind, reopening the console. The recovery path\nwhen an operator is about to lock themselves out (admins list omits them).",
+        "operationId": "delete_console_auth",
+        "responses": {
+          "200": {
+            "description": "Unbound; the console is open again",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not write the config file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/api/events": {
+      "get": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`GET /api/events` — backfill recent events, then stream live ones. Honors\n`?since=<id>` and the `Last-Event-ID` header for reconnect backfill.",
+        "description": "Each message's `data` is a JSON `Event`\n`{ id, level, subsystem, target, message, fields, timestamp }`. A `lagged`\nevent signals the client fell behind and some events were dropped.",
+        "operationId": "stream_events",
+        "parameters": [
+          {
+            "name": "since",
+            "in": "query",
+            "description": "Replay events with id greater than this (same role as `Last-Event-ID`).",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SSE stream of console events; each message's `data` is one JSON `Event`",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/Event"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`GET /api/health` — ungated liveness probe.",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Service is up",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/lark-apps": {
+      "get": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`GET /api/lark-apps` — the registry, `app_secret` redacted to a boolean.",
+        "operationId": "list_lark_apps",
+        "responses": {
+          "200": {
+            "description": "Registered Lark apps (secrets redacted)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LarkAppsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`POST /api/lark-apps` — live-test the credentials, then write the entry.\nNothing is persisted unless the test passes.",
+        "operationId": "upsert_lark_app",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Credentials valid and saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpsertAck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or failed credential test",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not write the config file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/api/lark-apps/test": {
+      "post": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`POST /api/lark-apps/test` — dry-run a credential check without saving.\nAlways `200`; the body's `ok` flag carries the verdict.",
+        "operationId": "test_lark_app",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Credential-test verdict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/api/lark-apps/{name}": {
+      "delete": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`DELETE /api/lark-apps/{name}` — drop an entry. Apps still referencing it\nwill fail their next build (surfaced as Errored in the console).",
+        "operationId": "delete_lark_app",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "description": "Registry entry name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Entry removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such entry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Could not write the config file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/api/status": {
+      "get": {
+        "tags": [
+          "console"
+        ],
+        "summary": "`GET /api/status` — latest liveness of every supervised subsystem.",
+        "operationId": "get_status",
+        "responses": {
+          "200": {
+            "description": "Per-subsystem status snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ]
+      }
+    },
+    "/auth/callback": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "`GET /auth/callback` — exchange the code, check the allowlist, mint a\nsession.",
+        "operationId": "callback",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "Authorization code from Lark (present on success).",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Opaque state echoed back; must match the login handshake.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "description": "Error code from Lark (present when the user denied access).",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "Signed in; redirect to the console"
+          },
+          "400": {
+            "description": "Missing/mismatched login state, or a Lark error"
+          },
+          "403": {
+            "description": "Account is not in [console].admins"
+          },
+          "502": {
+            "description": "Token exchange or user_info request failed"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "`GET /auth/login` — start the OAuth handshake; redirect to Lark.",
+        "operationId": "login",
+        "responses": {
+          "303": {
+            "description": "Redirect to Lark's authorize page"
+          },
+          "400": {
+            "description": "OAuth is not configured"
+          },
+          "500": {
+            "description": "Could not build the authorize URL"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "`POST /auth/logout` — drop the session cookie.",
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "Session cleared"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "`GET /auth/me` — ungated; tells the UI whether to show the login screen.",
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "Auth + current session state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionAck": {
+        "type": "object",
+        "description": "Acknowledgement that an action was queued for the running App.",
+        "required": [
+          "ok",
+          "app",
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "app": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AppActionSpec": {
+        "type": "object",
+        "description": "Wire mirror of `larkstack_core::ActionSpec`.",
+        "required": [
+          "name",
+          "description"
+        ],
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "params": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Free-form JSON descriptor the UI renders a form from; omitted when the\naction takes no parameters."
+          }
+        }
+      },
+      "AppKind": {
+        "type": "string",
+        "description": "Wire mirror of `larkstack_core::Kind`.",
+        "enum": [
+          "integration",
+          "automation"
+        ]
+      },
+      "AppManifest": {
+        "type": "object",
+        "description": "Wire mirror of `larkstack_core::Manifest`, plus the live `enabled` flag read\nfrom config (the manifest itself is static; `enabled` is operator state).",
+        "required": [
+          "name",
+          "kind",
+          "description",
+          "enabled",
+          "actions"
+        ],
+        "properties": {
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppActionSpec"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the supervisor is configured to run this app (`[<name>].enabled`)."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AppKind"
+          },
+          "lark_app": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The `[lark-apps.<name>]` this app binds for Lark credentials\n(`[<name>].lark_app`), if any. Editable via `PUT /api/config/{app}/lark-app`."
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "AppsResponse": {
+        "type": "object",
+        "description": "Body of `GET /api/apps`.",
+        "required": [
+          "apps"
+        ],
+        "properties": {
+          "apps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppManifest"
+            }
+          }
+        }
+      },
+      "BindReq": {
+        "type": "object",
+        "required": [
+          "lark_app"
+        ],
+        "properties": {
+          "admins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Admin email allowlist; empty = any tenant user may sign in."
+          },
+          "lark_app": {
+            "type": "string",
+            "description": "Name of a registered `[lark-apps.<name>]` to sign users in with."
+          },
+          "redirect_uri": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Override the auto-derived `<host>/auth/callback` (must match what the\nLark app registers)."
+          },
+          "scope": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Extra OAuth scopes, space-separated (usually none)."
+          }
+        }
+      },
+      "ConsoleAuthView": {
+        "type": "object",
+        "description": "Body of `GET /api/console-auth`.",
+        "required": [
+          "configured",
+          "admins"
+        ],
+        "properties": {
+          "admins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Admin email allowlist (empty = any tenant user may sign in)."
+          },
+          "configured": {
+            "type": "boolean",
+            "description": "Whether sign-in is currently enforced (a Lark app with working\ncredentials is bound). When false the console is OPEN."
+          },
+          "lark_app": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The bound `[lark-apps.<name>]`, if any."
+          },
+          "redirect_uri": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "EnabledAck": {
+        "type": "object",
+        "required": [
+          "ok",
+          "name",
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        }
+      },
+      "EnabledReq": {
+        "type": "object",
+        "required": [
+          "enabled"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Error body shared by every non-2xx JSON response.",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "Event": {
+        "type": "object",
+        "description": "Wire shape of one SSE `data` payload — mirrors [`larkstack_core::Event`]'s\nserde output, declared here so the schema lands in the OpenAPI spec without\n`larkstack-core` depending on `utoipa`. Never constructed: the handler\nserializes the core event directly.",
+        "required": [
+          "id",
+          "level",
+          "target",
+          "message",
+          "fields",
+          "timestamp"
+        ],
+        "properties": {
+          "fields": {
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "level": {
+            "$ref": "#/components/schemas/Level"
+          },
+          "message": {
+            "type": "string"
+          },
+          "subsystem": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "target": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix milliseconds.",
+            "minimum": 0
+          }
+        }
+      },
+      "LarkAppAck": {
+        "type": "object",
+        "required": [
+          "ok",
+          "name"
+        ],
+        "properties": {
+          "lark_app": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        }
+      },
+      "LarkAppReq": {
+        "type": "object",
+        "properties": {
+          "lark_app": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The `[lark-apps.<name>]` to bind for this app's Lark credentials, or\n`null`/empty to unbind (falling back to env / inline `[<app>.lark]`)."
+          }
+        }
+      },
+      "LarkAppView": {
+        "type": "object",
+        "description": "One registry entry, with the secret redacted to a flag.",
+        "required": [
+          "name",
+          "app_id",
+          "base_url",
+          "has_secret"
+        ],
+        "properties": {
+          "app_id": {
+            "type": "string"
+          },
+          "base_url": {
+            "type": "string"
+          },
+          "has_secret": {
+            "type": "boolean",
+            "description": "Whether an `app_secret` is stored (the secret itself is never returned)."
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "LarkAppsResponse": {
+        "type": "object",
+        "description": "Body of `GET /api/lark-apps`.",
+        "required": [
+          "lark_apps"
+        ],
+        "properties": {
+          "lark_apps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LarkAppView"
+            }
+          }
+        }
+      },
+      "Level": {
+        "type": "string",
+        "description": "Mirrors [`larkstack_core::Level`]'s lowercase serde encoding.",
+        "enum": [
+          "trace",
+          "debug",
+          "info",
+          "warn",
+          "error"
+        ]
+      },
+      "Me": {
+        "type": "object",
+        "required": [
+          "auth_required",
+          "authenticated"
+        ],
+        "properties": {
+          "auth_required": {
+            "type": "boolean",
+            "description": "Whether OAuth is configured at all. When false the console is open."
+          },
+          "authenticated": {
+            "type": "boolean"
+          },
+          "user": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MeUser"
+              }
+            ]
+          }
+        }
+      },
+      "MeUser": {
+        "type": "object",
+        "required": [
+          "email",
+          "name"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "OkResponse": {
+        "type": "object",
+        "description": "Generic `{ \"ok\": true }` success body.",
+        "required": [
+          "ok"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        }
+      },
+      "StatusResponse": {
+        "type": "object",
+        "description": "Body of `GET /api/status`.",
+        "required": [
+          "subsystems"
+        ],
+        "properties": {
+          "subsystems": {
+            "type": "object",
+            "description": "Subsystem name → its latest status.",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SubsystemStatus"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SubsystemState": {
+        "type": "string",
+        "description": "Wire mirror of `larkstack_core::State`.",
+        "enum": [
+          "starting",
+          "running",
+          "errored",
+          "stopped"
+        ]
+      },
+      "SubsystemStatus": {
+        "type": "object",
+        "description": "One subsystem's status — wire mirror of `larkstack_core::Status`.",
+        "required": [
+          "state",
+          "updated_at"
+        ],
+        "properties": {
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/SubsystemState"
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix-epoch milliseconds of the last transition.",
+            "minimum": 0
+          }
+        }
+      },
+      "TestReq": {
+        "type": "object",
+        "required": [
+          "app_id",
+          "app_secret"
+        ],
+        "properties": {
+          "app_id": {
+            "type": "string"
+          },
+          "app_secret": {
+            "type": "string"
+          },
+          "base_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "TestResult": {
+        "type": "object",
+        "description": "Body of `POST /api/lark-apps/test`: `ok` plus either the token lifetime or\nthe failure reason.",
+        "required": [
+          "ok"
+        ],
+        "properties": {
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Failure reason, on error."
+          },
+          "expire": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Token lifetime in seconds, on success.",
+            "minimum": 0
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertAck": {
+        "type": "object",
+        "description": "Body of a successful `POST /api/lark-apps`.",
+        "required": [
+          "ok",
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpsertReq": {
+        "type": "object",
+        "required": [
+          "name",
+          "app_id",
+          "app_secret"
+        ],
+        "properties": {
+          "app_id": {
+            "type": "string"
+          },
+          "app_secret": {
+            "type": "string"
+          },
+          "base_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "lk_session"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "console",
+      "description": "Admin API — session-gated once OAuth is configured"
+    },
+    {
+      "name": "auth",
+      "description": "Lark OAuth login flow"
+    }
+  ]
+}

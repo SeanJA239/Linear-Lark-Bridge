@@ -1,21 +1,13 @@
 import { Field } from "@base-ui/react/field";
 import { useState } from "react";
 import { Link } from "react-router";
-import useSWR, { mutate } from "swr";
-import { errMessage, mutateRequest } from "../lib/http";
-import type { LarkAppRow } from "./RegisterLarkApp";
+import { invalidate, TAG_APPS, TAG_LARK_APPS, TAG_STATUS } from "../lib/cache";
+import { errMessage } from "../lib/errors";
+import { useData, useMutation } from "../lib/tayori";
+import { listApps, listLarkApps, setAppLarkApp } from "../sdk";
 import { Select } from "./Select";
 
 type Feedback = { tone: "ok" | "error"; text: string } | null;
-
-interface AppManifest {
-  name: string;
-  lark_app?: string;
-}
-
-interface AppsResponse {
-  apps: AppManifest[];
-}
 
 /// Bind (or clear) the `[lark-apps.<name>]` this app uses for Lark credentials,
 /// from the UI rather than by hand-editing TOML. Writes `[<app>].lark_app` via
@@ -24,11 +16,11 @@ interface AppsResponse {
 /// restart. Delivery (bot DMs / group cards) needs a bound app, so this sits at
 /// the top of each app's page.
 export function LarkBinding({ appName }: { appName: string }) {
-  const { data: appsData } = useSWR<AppsResponse>("/api/apps");
-  const { data: registry } = useSWR<{ lark_apps: LarkAppRow[] }>(
-    "/api/lark-apps",
-  );
-  const [pending, setPending] = useState(false);
+  const { data: appsData } = useData(listApps, { cacheTags: [TAG_APPS] });
+  const { data: registry } = useData(listLarkApps, {
+    cacheTags: [TAG_LARK_APPS],
+  });
+  const bind = useMutation(setAppLarkApp);
   const [feedback, setFeedback] = useState<Feedback>(null);
 
   const apps = registry?.lark_apps ?? [];
@@ -36,27 +28,21 @@ export function LarkBinding({ appName }: { appName: string }) {
     appsData?.apps.find((a) => a.name === appName)?.lark_app ?? "";
 
   const onChange = async (next: string) => {
-    setPending(true);
     setFeedback(null);
     try {
-      await mutateRequest(
-        `/api/config/${encodeURIComponent(appName)}/lark-app`,
-        {
-          method: "PUT",
-          json: { lark_app: next || null },
-        },
-      );
+      await bind.trigger({
+        path: { app: appName },
+        body: { lark_app: next || null },
+      });
       // The binding lives in /api/apps; the rebind restarts the app, so refresh
       // status too.
-      await Promise.all([mutate("/api/apps"), mutate("/api/status")]);
+      await invalidate(TAG_APPS, TAG_STATUS);
       setFeedback({
         tone: "ok",
         text: next ? `bound to "${next}"` : "unbound",
       });
     } catch (e) {
       setFeedback({ tone: "error", text: errMessage(e) });
-    } finally {
-      setPending(false);
     }
   };
 
@@ -75,7 +61,7 @@ export function LarkBinding({ appName }: { appName: string }) {
           id={`lark-app-${appName}`}
           className="field-input field-select"
           value={current}
-          disabled={pending || apps.length === 0}
+          disabled={bind.isMutating || apps.length === 0}
           onValueChange={onChange}
           options={[
             { value: "", label: "— none (use env / inline) —" },

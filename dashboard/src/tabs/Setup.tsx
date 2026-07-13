@@ -2,22 +2,12 @@ import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
-import {
-  type LarkAppRow,
-  RegisterLarkApp,
-} from "../components/RegisterLarkApp";
+import { RegisterLarkApp } from "../components/RegisterLarkApp";
 import { Select } from "../components/Select";
-import { errMessage, mutateRequest } from "../lib/http";
-
-interface ConsoleAuth {
-  configured: boolean;
-  lark_app?: string;
-  admins: string[];
-  redirect_uri?: string;
-  scope?: string;
-}
+import { TAG_CONSOLE_AUTH, TAG_LARK_APPS } from "../lib/cache";
+import { errMessage } from "../lib/errors";
+import { useData, useMutation } from "../lib/tayori";
+import { getConsoleAuth, listLarkApps, putConsoleAuth } from "../sdk";
 
 /// Split an admin list pasted as comma / whitespace / newline separated.
 function parseAdmins(raw: string): string[] {
@@ -31,10 +21,12 @@ function parseAdmins(raw: string): string[] {
 /// sign-in client. Binding is the moment the console stops being open — this
 /// screen makes that explicit and hands the operator straight to the login flow.
 export function Setup() {
-  const { data: registry } = useSWR<{ lark_apps: LarkAppRow[] }>(
-    "/api/lark-apps",
-  );
-  const { data: current } = useSWR<ConsoleAuth>("/api/console-auth");
+  const { data: registry } = useData(listLarkApps, {
+    cacheTags: [TAG_LARK_APPS],
+  });
+  const { data: current } = useData(getConsoleAuth, {
+    cacheTags: [TAG_CONSOLE_AUTH],
+  });
   const apps = registry?.lark_apps ?? [];
   const hasApp = apps.length > 0;
 
@@ -52,11 +44,7 @@ export function Setup() {
     if (current?.admins?.length) setAdmins(current.admins.join(", "));
   }, [current, apps]);
 
-  const bind = useSWRMutation(
-    "/api/console-auth",
-    (url: string, { arg }: { arg: ConsoleAuth }) =>
-      mutateRequest(url, { method: "PUT", json: arg }),
-  );
+  const bind = useMutation(putConsoleAuth);
 
   const onSecure = async () => {
     setError(null);
@@ -66,9 +54,10 @@ export function Setup() {
     }
     try {
       await bind.trigger({
-        configured: true,
-        lark_app: larkApp,
-        admins: parseAdmins(admins),
+        body: {
+          lark_app: larkApp,
+          admins: parseAdmins(admins),
+        },
       });
       // Binding now enforces sign-in; hand off to the OAuth flow.
       window.location.assign("/auth/login");

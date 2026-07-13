@@ -12,20 +12,26 @@
     "check:fix": "biome check --write .",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "lint": "biome lint ."
+    "lint": "biome lint .",
+    "generate": "openapi-ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
     "@icons-pack/react-simple-icons": "^13.13.0",
+    "@phosphor-icons/react": "^2.1.10",
     "foxact": "^0.3.5",
+    "ky": "^1.14.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.78.0",
     "react-router": "^7.17.0",
-    "swr": "^2.4.1"
+    "swr": "^2.4.1",
+    "tayori": "^0.3.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",
+    "@hey-api/openapi-ts": "^0.99.0",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",

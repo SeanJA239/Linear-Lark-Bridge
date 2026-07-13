@@ -17,7 +17,7 @@ use super::ApiError;
 /// result string from `Instance::handle_action` surfaces on the event stream,
 /// not in this response.
 #[utoipa::path(
-    post, path = "/actions/{app}/{action}", tag = "console",
+    post, path = "/actions/{app}/{action}", operation_id = "dispatch_action", tag = "console",
     security(("session" = [])),
     params(
         ("app" = String, Path, description = "Registered app name"),

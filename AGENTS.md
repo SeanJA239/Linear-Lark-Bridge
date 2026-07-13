@@ -42,7 +42,9 @@ An App is a registered descriptor (`fn app() -> Arc<dyn App>`) that builds a con
 
 **Lark-app registry.** Lark credentials live once under `[lark-apps.<name>] = { app_id, app_secret, base_url }`; an app binds to one with `lark_app = "<name>"` in its own section (resolved in each app's `from_toml`, before the inline `[<app>].lark` / env overlay). Onboard/manage entries from the console's **Lark Apps** tab, which live-tests the credentials (mints a `tenant_access_token`) before saving. Credentials are stored plaintext in `config.toml` (gated behind the console's Lark-OAuth session); the registry GET redacts `app_secret`.
 
-**Frontend** lives in `dashboard/` at the repo root (React + Vite, **pnpm**). `pnpm build` emits to `dashboard/dist/`, which `rust-embed` bakes into the host at compile time (the host crate embeds `../../dashboard/dist/`). `crates/larkstack/build.rs` writes a stub `index.html` if the frontend isn't built yet so `cargo build` always succeeds.
+**Frontend** lives in `dashboard/` at the repo root (React + Vite, **pnpm**). `pnpm build` emits to `dashboard/dist/`, which `rust-embed` bakes into the host at compile time (the host crate embeds `../../dashboard/dist/`) — so a UI change needs `pnpm build` **and** a console rebuild to show up in the served binary. `crates/larkstack/build.rs` writes a stub `index.html` if the frontend isn't built yet so `cargo build` always succeeds.
+
+**Frontend data layer** is spec-first: `cargo xtask dump-openapi` writes the console's OpenAPI spec to `dashboard/openapi.json` (derived without a running host via `larkstack::openapi_json()`), and `pnpm generate` (`@hey-api/openapi-ts`, config in `dashboard/openapi-ts.config.ts`) turns it into `dashboard/src/sdk/` — a ky client with per-operation zod response validation. Both artifacts are committed; regenerate them (dump → generate) whenever a `#[utoipa::path]` route or a `ToSchema` wire struct changes. Components consume the SDK through [tayori](https://github.com/SukkaW/tayori) (`src/lib/tayori.ts`: `useData`/`useMutation` — the SWR key *is* the SDK fn + arg), with cross-view invalidation via `cacheTags` (`src/lib/cache.ts`). App-contributed routes (`/api/apps/<app>/…`) are absent from the spec by design; they get hand-written SDK-shaped functions + zod schemas in `src/lib/{routing,linear,standup}-api.ts`, consumed by the same hooks. `ky` is pinned to `^1` — `@hey-api/client-ky`'s error path double-reads the response body under ky 2.
 
 ## Development Environment
 
@@ -79,6 +81,10 @@ cargo run -p console
 cd dashboard && pnpm install && pnpm build
 # Frontend dev loop: Vite dev server (hot reload) proxies /api + /auth to a console on :8080
 cd dashboard && pnpm dev        # run alongside `cargo run -p console`
+
+# Regenerate the typed frontend SDK after changing console routes/schemas
+cargo xtask dump-openapi        # routes -> dashboard/openapi.json (committed)
+cd dashboard && pnpm generate   # openapi.json -> src/sdk/ (committed)
 ```
 
 ## crates/larkstack (host)

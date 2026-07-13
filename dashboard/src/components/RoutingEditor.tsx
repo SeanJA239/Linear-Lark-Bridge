@@ -4,57 +4,24 @@ import { Input } from "@base-ui/react/input";
 import { Toggle } from "@base-ui/react/toggle";
 import { ToggleGroup } from "@base-ui/react/toggle-group";
 import { useEffect, useRef, useState } from "react";
-import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
-import { errMessage, mutateRequest } from "../lib/http";
+import { invalidate, routingTag } from "../lib/cache";
+import { errMessage } from "../lib/errors";
+import {
+  type ChatInfo,
+  type Destination,
+  type DestKind,
+  getRouting,
+  getRoutingSpec,
+  listRoutingChats,
+  listRoutingUsers,
+  putRouting,
+  type RoutingConfig,
+  type RoutingSpec,
+  type UserInfo,
+} from "../lib/routing-api";
+import { useData, useMutation } from "../lib/tayori";
 import { Select } from "./Select";
 import { Spinner } from "./Spinner";
-
-// ── Wire shape (matches lark_kit::routing::Config) ──────────────────────────
-
-type DestKind = "chat" | "dm";
-interface Destination {
-  kind: DestKind;
-  target: string;
-}
-interface Rule {
-  match: string;
-  events: string[];
-  destinations: Destination[];
-}
-interface UserMap {
-  username: string;
-  lark_email: string;
-}
-interface RoutingConfig {
-  rules: Rule[];
-  default_destinations: Destination[];
-  user_map: UserMap[];
-  alert_labels: string[];
-}
-interface Chat {
-  chat_id: string;
-  name: string;
-}
-interface User {
-  open_id: string;
-  name: string;
-}
-interface RoutingSpec {
-  namespace: string;
-  subject: {
-    label: string;
-    placeholder: string;
-    help: string;
-  };
-  events: EventOption[];
-  features: {
-    user_map: boolean;
-    alert_labels: boolean;
-    chat_picker: boolean;
-    user_picker: boolean;
-  };
-}
 
 // ── Editable shape: rows carry a stable client key (avoids index keys) and
 //    alert_labels is edited as a CSV string. ──────────────────────────────────
@@ -68,8 +35,10 @@ interface RuleRow {
   events: string[];
   destinations: DestRow[];
 }
-interface UserMapRow extends UserMap {
+interface UserMapRow {
   key: number;
+  username: string;
+  lark_email: string;
 }
 interface EditState {
   rules: RuleRow[];
@@ -80,35 +49,29 @@ interface EditState {
 
 type Feedback = { tone: "ok" | "error"; text: string } | null;
 
-export interface EventOption {
-  value: string;
-  label: string;
-  description: string;
-}
-
 export interface RoutingEditorProps {
   /** App name; backs the API base `/api/apps/<appName>/routing`. */
   appName: string;
 }
 
 export function RoutingEditor({ appName }: RoutingEditorProps) {
-  const url = `/api/apps/${appName}/routing`;
-  const { data: spec, error: specError } = useSWR<RoutingSpec>(`${url}/spec`);
-  const { data, error, mutate } = useSWR<RoutingConfig>(url);
+  const { data: spec, error: specError } = useData(getRoutingSpec, {
+    path: { app: appName },
+  });
+  const { data, error } = useData(getRouting, {
+    path: { app: appName },
+    cacheTags: [routingTag(appName)],
+  });
   // The bot's chats + reachable users power the searchable pickers; absent (503)
   // when the app is stopped or has no bot — the fields then fall back to manual
-  // entry. `shouldRetryOnError: false` so a stopped app doesn't retry-storm.
-  const { data: chats, error: chatsError } = useSWR<Chat[]>(
-    spec?.features.chat_picker ? `/api/apps/${appName}/chats` : null,
-    {
-      shouldRetryOnError: false,
-    },
+  // entry (retries are disabled globally, so a stopped app doesn't retry-storm).
+  const { data: chats, error: chatsError } = useData(
+    listRoutingChats,
+    spec?.features.chat_picker && { path: { app: appName } },
   );
-  const { data: users, error: usersError } = useSWR<User[]>(
-    spec?.features.user_picker ? `/api/apps/${appName}/users` : null,
-    {
-      shouldRetryOnError: false,
-    },
+  const { data: users, error: usersError } = useData(
+    listRoutingUsers,
+    spec?.features.user_picker && { path: { app: appName } },
   );
   const [edit, setEdit] = useState<EditState | null>(null);
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -152,16 +115,9 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
     baseline.current = JSON.stringify(data);
   }, [data]);
 
-  const save = useSWRMutation(
-    url,
-    (u: string, { arg }: { arg: RoutingConfig }) =>
-      mutateRequest<RoutingConfig>(u, { method: "PUT", json: arg }),
-    {
-      onSuccess: (saved) => {
-        if (saved) void mutate(saved, { revalidate: false });
-      },
-    },
-  );
+  const save = useMutation(putRouting, {
+    onSuccess: () => void invalidate(routingTag(appName)),
+  });
 
   // Dirty when the edited config diverges from the loaded/saved baseline.
   const dirty =
@@ -196,7 +152,7 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
   const onSave = async () => {
     setFeedback(null);
     try {
-      await save.trigger(toWire(edit, spec));
+      await save.trigger({ path: { app: appName }, body: toWire(edit, spec) });
       setFeedback({ tone: "ok", text: "routing saved" });
     } catch (e) {
       setFeedback({ tone: "error", text: errMessage(e) });
@@ -531,8 +487,8 @@ function DestinationList({
   hideLabel = false,
 }: {
   dests: DestRow[];
-  chats: Chat[] | undefined;
-  users: User[] | undefined;
+  chats: ChatInfo[] | undefined;
+  users: UserInfo[] | undefined;
   onChange: (ds: DestRow[]) => void;
   onAdd: () => void;
   /** Omit the "Destinations" sub-label (the section header already names it). */

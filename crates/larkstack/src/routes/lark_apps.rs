@@ -23,7 +23,7 @@ use super::{ApiError, OkResponse, parse_doc, write_doc};
 
 /// `GET /api/lark-apps` — the registry, `app_secret` redacted to a boolean.
 #[utoipa::path(
-    get, path = "/lark-apps", tag = "console",
+    get, path = "/lark-apps", operation_id = "list_lark_apps", tag = "console",
     security(("session" = [])),
     responses((status = 200, description = "Registered Lark apps (secrets redacted)", body = LarkAppsResponse)),
 )]
@@ -53,7 +53,7 @@ pub(crate) struct UpsertReq {
 /// `POST /api/lark-apps` — live-test the credentials, then write the entry.
 /// Nothing is persisted unless the test passes.
 #[utoipa::path(
-    post, path = "/lark-apps", tag = "console",
+    post, path = "/lark-apps", operation_id = "upsert_lark_app", tag = "console",
     security(("session" = [])),
     request_body = UpsertReq,
     responses(
@@ -95,7 +95,7 @@ pub(crate) async fn upsert(
 /// `DELETE /api/lark-apps/{name}` — drop an entry. Apps still referencing it
 /// will fail their next build (surfaced as Errored in the console).
 #[utoipa::path(
-    delete, path = "/lark-apps/{name}", tag = "console",
+    delete, path = "/lark-apps/{name}", operation_id = "delete_lark_app", tag = "console",
     security(("session" = [])),
     params(("name" = String, Path, description = "Registry entry name")),
     responses(
@@ -127,7 +127,7 @@ pub(crate) struct TestReq {
 /// `POST /api/lark-apps/test` — dry-run a credential check without saving.
 /// Always `200`; the body's `ok` flag carries the verdict.
 #[utoipa::path(
-    post, path = "/lark-apps/test", tag = "console",
+    post, path = "/lark-apps/test", operation_id = "test_lark_app", tag = "console",
     security(("session" = [])),
     request_body = TestReq,
     responses((status = 200, description = "Credential-test verdict", body = TestResult)),

@@ -23,6 +23,8 @@ mod assets;
 mod routes;
 mod supervisor;
 
+pub use routes::openapi_json;
+
 const DEFAULT_CONFIG: &str = r#"# larkstack console config
 #
 # Each app owns a top-level section. `enabled` (default false) toggles whether

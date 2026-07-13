@@ -1,18 +1,12 @@
+/// Live console event feed over SSE. EventSource has no fetch-style client, so
+/// this stays outside the SDK — but the payload type (`Event`) and the level
+/// vocabulary come from the generated spec types, so the shape can't drift.
+
 import { useEffect, useRef, useState } from "react";
-import { mutate } from "swr";
-import { sseUrl } from "./auth";
+import type { Event as ControlEvent, Level } from "../sdk";
+import { revalidateMe } from "./auth";
 
-export type Level = "trace" | "debug" | "info" | "warn" | "error";
-
-export interface ControlEvent {
-  id: number;
-  level: Level;
-  subsystem: string | null;
-  target: string;
-  message: string;
-  fields: Record<string, unknown>;
-  timestamp: number;
-}
+export type { ControlEvent, Level };
 
 const MAX_EVENTS = 500;
 
@@ -33,7 +27,8 @@ export function useEvents(): {
 
     const connect = () => {
       if (cancelled) return;
-      src = new EventSource(sseUrl("/api/events"));
+      // The session cookie rides along on same-origin requests — no token.
+      src = new EventSource("/api/events");
       src.onopen = () => {
         failuresRef.current = 0;
         setConnected(true);
@@ -48,7 +43,7 @@ export function useEvents(): {
         // to login — mirroring the REST 401 path.
         failuresRef.current += 1;
         if (failuresRef.current === 3) {
-          void mutate("/auth/me");
+          void revalidateMe();
         }
         reconnectRef.current = window.setTimeout(connect, 2000);
       };

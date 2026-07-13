@@ -13,6 +13,9 @@ struct Cli {
 enum Task {
     /// Refresh apps/integrations/linear/graphql/schema.graphql.
     UpdateLinearSchema,
+    /// Refresh dashboard/openapi.json (the console API spec the frontend SDK
+    /// is generated from).
+    DumpOpenapi,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -20,5 +23,6 @@ fn main() -> anyhow::Result<()> {
 
     match cli.command {
         Task::UpdateLinearSchema => tasks::update_linear_schema(),
+        Task::DumpOpenapi => tasks::dump_openapi(),
     }
 }

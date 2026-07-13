@@ -146,6 +146,48 @@ impl Modify for SessionScheme {
     }
 }
 
+/// The OpenAPI-documented `/api` route set, minus `health` (which [`build`]
+/// appends *after* the session gate). Shared with [`openapi_json`] so the
+/// dumped spec can never drift from the routes that are served.
+fn documented_api() -> OpenApiRouter<HostState> {
+    OpenApiRouter::new()
+        .routes(routes!(status::status))
+        .routes(routes!(status::apps))
+        .routes(routes!(config::get_config, config::put_config))
+        .routes(routes!(config::set_app_enabled))
+        .routes(routes!(config::set_app_lark_app))
+        .routes(routes!(events::events))
+        .routes(routes!(lark_apps::list, lark_apps::upsert))
+        .routes(routes!(lark_apps::test))
+        .routes(routes!(lark_apps::delete))
+        .routes(routes!(
+            console_auth::get_console_auth,
+            console_auth::put_console_auth,
+            console_auth::delete_console_auth
+        ))
+        .routes(routes!(actions::dispatch))
+}
+
+/// The ungated `/auth` OAuth route set.
+fn documented_auth() -> OpenApiRouter<HostState> {
+    OpenApiRouter::new()
+        .routes(routes!(oauth::login))
+        .routes(routes!(oauth::callback))
+        .routes(routes!(oauth::logout))
+        .routes(routes!(oauth::me))
+}
+
+/// The console's OpenAPI spec as pretty JSON, derivable without a running
+/// host. `cargo xtask dump-openapi` writes it to `dashboard/openapi.json`,
+/// which the frontend SDK is generated from.
+pub fn openapi_json() -> String {
+    let (_, spec) = OpenApiRouter::with_openapi(ApiDoc::openapi())
+        .nest("/api", documented_api().routes(routes!(health)))
+        .nest("/auth", documented_auth())
+        .split_for_parts();
+    spec.to_pretty_json().expect("OpenAPI spec serializes")
+}
+
 /// Assemble the full console router: gated `/api/*`, ungated `/auth/*`, the
 /// OpenAPI spec + Scalar docs, and the embedded SPA fallback.
 ///
@@ -162,33 +204,14 @@ pub(crate) fn build(
     let gate = axum::middleware::from_fn_with_state(state.clone(), oauth::require_session);
 
     // `/api/*` — session-gated, except `/api/health` (added after `route_layer`).
-    let mut api = OpenApiRouter::new()
-        .routes(routes!(status::status))
-        .routes(routes!(status::apps))
-        .routes(routes!(config::get_config, config::put_config))
-        .routes(routes!(config::set_app_enabled))
-        .routes(routes!(config::set_app_lark_app))
-        .routes(routes!(events::events))
-        .routes(routes!(lark_apps::list, lark_apps::upsert))
-        .routes(routes!(lark_apps::test))
-        .routes(routes!(lark_apps::delete))
-        .routes(routes!(
-            console_auth::get_console_auth,
-            console_auth::put_console_auth,
-            console_auth::delete_console_auth
-        ))
-        .routes(routes!(actions::dispatch));
+    let mut api = documented_api();
     for (name, router) in app_routers {
         api = api.nest_service(&format!("/apps/{name}"), router);
     }
     let api = api.route_layer(gate).routes(routes!(health));
 
     // `/auth/*` — ungated.
-    let auth = OpenApiRouter::new()
-        .routes(routes!(oauth::login))
-        .routes(routes!(oauth::callback))
-        .routes(routes!(oauth::logout))
-        .routes(routes!(oauth::me));
+    let auth = documented_auth();
 
     let (router, spec) = OpenApiRouter::with_openapi(ApiDoc::openapi())
         .nest("/api", api)

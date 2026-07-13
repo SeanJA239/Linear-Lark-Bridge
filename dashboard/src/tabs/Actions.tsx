@@ -3,8 +3,9 @@ import { Field } from "@base-ui/react/field";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router";
-import useSWRMutation from "swr/mutation";
-import { errMessage, mutateRequest } from "../lib/http";
+import { errMessage } from "../lib/errors";
+import { useMutation } from "../lib/tayori";
+import { dispatchAction } from "../sdk";
 
 interface ActionParam {
   name: string;
@@ -138,17 +139,12 @@ function ActionCard({
   } = useForm<Record<string, string>>({ defaultValues: defaults });
   const [result, setResult] = useState<RunState>(null);
 
-  const fire = useSWRMutation(
-    `action:${subsystem}/${action.name}`,
-    (_key: string, { arg }: { arg: Record<string, string> | null }) =>
-      mutateRequest(`/api/actions/${subsystem}/${action.name}`, { json: arg }),
-    { revalidate: false, populateCache: false },
-  );
+  const fire = useMutation(dispatchAction);
 
   const onRun = handleSubmit(async (values) => {
     setResult(null);
     // Send required fields always; drop empty optionals so JSON carries only
-    // real values (and `null` when nothing is left).
+    // real values.
     const required = new Set(
       params.filter((p) => p.required).map((p) => p.name),
     );
@@ -158,7 +154,10 @@ function ActionCard({
       if (required.has(k) || trimmed) body[k] = trimmed;
     }
     try {
-      await fire.trigger(Object.keys(body).length ? body : null);
+      await fire.trigger({
+        path: { app: subsystem, action: action.name },
+        body,
+      });
       setResult({ tone: "ok", text: "dispatched" });
       window.setTimeout(() => setResult(null), 2500);
     } catch (e) {

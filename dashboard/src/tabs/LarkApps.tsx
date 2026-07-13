@@ -1,38 +1,29 @@
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { Button } from "@base-ui/react/button";
 import { useState } from "react";
-import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
-import {
-  type LarkAppRow,
-  RegisterLarkApp,
-} from "../components/RegisterLarkApp";
-import { errMessage, mutateRequest } from "../lib/http";
+import { RegisterLarkApp } from "../components/RegisterLarkApp";
+import { invalidate, TAG_LARK_APPS } from "../lib/cache";
+import { errMessage } from "../lib/errors";
+import { useData, useMutation } from "../lib/tayori";
+import { deleteLarkApp, type LarkAppView, listLarkApps } from "../sdk";
 
 export function LarkApps() {
-  const { data, error, mutate } = useSWR<{ lark_apps: LarkAppRow[] }>(
-    "/api/lark-apps",
-  );
+  const { data, error } = useData(listLarkApps, { cacheTags: [TAG_LARK_APPS] });
   const apps = data?.lark_apps;
 
-  const [editing, setEditing] = useState<LarkAppRow | null>(null);
+  const [editing, setEditing] = useState<LarkAppView | null>(null);
   const [target, setTarget] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const remove = useSWRMutation(
-    "/api/lark-apps",
-    (_url: string, { arg }: { arg: string }) =>
-      mutateRequest(`/api/lark-apps/${encodeURIComponent(arg)}`, {
-        method: "DELETE",
-      }),
-    { onSuccess: () => mutate() },
-  );
+  const remove = useMutation(deleteLarkApp, {
+    onSuccess: () => void invalidate(TAG_LARK_APPS),
+  });
 
   const confirmDelete = async () => {
     if (!target) return;
     setFeedback(null);
     try {
-      await remove.trigger(target);
+      await remove.trigger({ path: { name: target } });
       setTarget(null);
     } catch (e) {
       setTarget(null);
@@ -55,7 +46,9 @@ export function LarkApps() {
         onCancelEdit={() => setEditing(null)}
       />
 
-      {error && <p className="error">Failed to load: {errMessage(error)}</p>}
+      {error !== undefined && (
+        <p className="error">Failed to load: {errMessage(error)}</p>
+      )}
       {feedback && <p className="error">{feedback}</p>}
       {apps && apps.length > 0 && (
         <table style={{ marginTop: "1.5rem" }}>

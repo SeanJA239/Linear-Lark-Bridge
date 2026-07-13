@@ -8,9 +8,16 @@ import {
 } from "@icons-pack/react-simple-icons";
 import { useState } from "react";
 import { Link } from "react-router";
-import useSWR, { mutate } from "swr";
 import { Spinner } from "../components/Spinner";
-import { errMessage, mutateRequest } from "../lib/http";
+import { invalidate, TAG_APPS, TAG_STATUS } from "../lib/cache";
+import { errMessage } from "../lib/errors";
+import { useData, useMutation } from "../lib/tayori";
+import {
+  getStatus,
+  listApps,
+  type SubsystemState,
+  setAppEnabled,
+} from "../sdk";
 
 /// Apps that have a dedicated config page. Their card title links there; any
 /// app without an entry here renders a plain, static title.
@@ -51,29 +58,6 @@ function AppLogo({ name }: { name: string }) {
   );
 }
 
-type State = "starting" | "running" | "errored" | "stopped";
-
-interface Subsystem {
-  state: State;
-  message: string | null;
-  updated_at: number;
-}
-
-interface StatusResponse {
-  subsystems: Record<string, Subsystem>;
-}
-
-interface AppManifest {
-  name: string;
-  kind: "integration" | "automation";
-  description: string;
-  enabled: boolean;
-}
-
-interface AppsResponse {
-  apps: AppManifest[];
-}
-
 function freshness(ms: number): string {
   const dt = Date.now() - ms;
   if (dt < 1000) return "just now";
@@ -83,13 +67,16 @@ function freshness(ms: number): string {
 }
 
 export function Status() {
-  const { data: status, error } = useSWR<StatusResponse>("/api/status", {
-    refreshInterval: 3000,
-  });
-  const { data: appsData } = useSWR<AppsResponse>("/api/apps");
+  const { data: status, error } = useData(
+    getStatus,
+    { cacheTags: [TAG_STATUS] },
+    { refreshInterval: 3000 },
+  );
+  const { data: appsData } = useData(listApps, { cacheTags: [TAG_APPS] });
   const subsystems = status?.subsystems ?? {};
   const apps = appsData?.apps;
 
+  const toggle = useMutation(setAppEnabled);
   const [pending, setPending] = useState<string | null>(null);
   const [toggleError, setToggleError] = useState<string | null>(null);
 
@@ -97,11 +84,8 @@ export function Status() {
     setPending(name);
     setToggleError(null);
     try {
-      await mutateRequest(`/api/config/${encodeURIComponent(name)}/enabled`, {
-        method: "PUT",
-        json: { enabled },
-      });
-      await Promise.all([mutate("/api/apps"), mutate("/api/status")]);
+      await toggle.trigger({ path: { app: name }, body: { enabled } });
+      await invalidate(TAG_APPS, TAG_STATUS);
     } catch (e) {
       setToggleError(`${name}: ${errMessage(e)}`);
     } finally {
@@ -112,7 +96,9 @@ export function Status() {
   return (
     <section>
       <h2>Apps</h2>
-      {error && <p className="error">Failed to load: {errMessage(error)}</p>}
+      {error !== undefined && (
+        <p className="error">Failed to load: {errMessage(error)}</p>
+      )}
       {toggleError && <p className="error">{toggleError}</p>}
       {!apps && <Spinner />}
       {apps && apps.length === 0 && <p className="muted">no apps registered</p>}
@@ -120,7 +106,7 @@ export function Status() {
         <div className="status-grid">
           {apps.map((app) => {
             const s = subsystems[app.name];
-            const state: State =
+            const state: SubsystemState =
               s?.state ?? (app.enabled ? "starting" : "stopped");
             const route = APP_ROUTES[app.name];
             return (

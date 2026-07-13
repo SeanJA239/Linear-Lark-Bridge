@@ -12,5 +12,6 @@ path = "src/main.rs"
 [dependencies]
 anyhow.workspace = true
 clap = { version = "4", features = ["derive"] }
+larkstack = { version = "0.1.0", path = "../crates/larkstack" }
 tempfile = "3"
 ureq = "2"

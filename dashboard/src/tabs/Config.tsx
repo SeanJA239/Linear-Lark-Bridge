@@ -2,18 +2,21 @@ import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import useSWR from "swr";
-import { errMessage, mutateRequest, textFetcher } from "../lib/http";
+import { invalidate, TAG_CONFIG } from "../lib/cache";
+import { errMessage } from "../lib/errors";
+import { useData, useMutation } from "../lib/tayori";
+import { getConfig, putConfig } from "../sdk";
 
 interface ConfigForm {
   config: string;
 }
 
 export function Config() {
-  const { data, error, isLoading, mutate } = useSWR<string>(
-    "/api/config",
-    textFetcher,
-  );
+  // The config endpoint speaks TOML, not JSON: parse the response as text.
+  const { data, error, isLoading } = useData(getConfig, {
+    parseAs: "text",
+    cacheTags: [TAG_CONFIG],
+  });
   const {
     register,
     handleSubmit,
@@ -28,15 +31,15 @@ export function Config() {
     if (data !== undefined) reset({ config: data });
   }, [data, reset]);
 
+  const save = useMutation(putConfig);
+
   const onSubmit = handleSubmit(async ({ config }) => {
     setSaved(false);
     try {
-      await mutateRequest("/api/config", {
-        method: "PUT",
-        body: config,
-        contentType: "application/toml",
-      });
-      await mutate(); // re-GET the canonical stored TOML → resets the baseline
+      // The body is already TOML text — bypass the JSON body serializer.
+      await save.trigger({ body: config, bodySerializer: null });
+      // re-GET the canonical stored TOML → resets the baseline
+      await invalidate(TAG_CONFIG);
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2000);
     } catch (e) {
@@ -62,7 +65,9 @@ export function Config() {
           </Button>
         </div>
       </header>
-      {error && <p className="error">Failed to load: {errMessage(error)}</p>}
+      {error !== undefined && (
+        <p className="error">Failed to load: {errMessage(error)}</p>
+      )}
       <Field.Root>
         <Field.Control
           className="config-editor"

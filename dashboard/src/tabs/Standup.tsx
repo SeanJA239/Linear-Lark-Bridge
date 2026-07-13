@@ -8,39 +8,21 @@ import {
   type UseFormRegisterReturn,
   useForm,
 } from "react-hook-form";
-import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
 import { Checkbox } from "../components/Checkbox";
 import { LarkBinding } from "../components/LarkBinding";
-import { errMessage, mutateRequest } from "../lib/http";
+import { invalidate, TAG_STANDUP_SETTINGS } from "../lib/cache";
+import { errMessage } from "../lib/errors";
+import {
+  getStandupSettings,
+  putStandupSettings,
+  type StandupSettings,
+} from "../lib/standup-api";
+import { useData, useMutation } from "../lib/tayori";
 
 type Feedback = { tone: "ok" | "error"; text: string } | null;
 
-interface SettingsWire {
-  timezone: string;
-  announce_time: string;
-  announce_enabled: boolean;
-  remind_evening_time: string;
-  remind_evening_enabled: boolean;
-  remind_morning_time: string;
-  remind_morning_enabled: boolean;
-  urgent_time: string;
-  urgent_enabled: boolean;
-  doc_title: string;
-  header_done: string;
-  header_plan: string;
-  header_block: string;
-  column_widths: number[];
-  help_template: string;
-  check_template: string;
-  announce_title: string;
-  announce_body: string;
-  reminder_title: string;
-  reminder_body: string;
-}
-
 // The form mirrors the wire shape but holds column widths as an editable CSV string.
-interface SettingsForm extends Omit<SettingsWire, "column_widths"> {
+interface SettingsForm extends Omit<StandupSettings, "column_widths"> {
   column_widths: string;
 }
 
@@ -67,11 +49,11 @@ const DEFAULT_FORM: SettingsForm = {
   reminder_body: "",
 };
 
-function wireToForm(w: SettingsWire): SettingsForm {
+function wireToForm(w: StandupSettings): SettingsForm {
   return { ...w, column_widths: w.column_widths.join(", ") };
 }
 
-function formToWire(f: SettingsForm): SettingsWire {
+function formToWire(f: SettingsForm): StandupSettings {
   return {
     ...f,
     timezone: f.timezone.trim(),
@@ -163,9 +145,9 @@ function TemplateField({
 }
 
 function SettingsCard() {
-  const { data, error, mutate } = useSWR<SettingsWire>(
-    "/api/apps/standup/settings",
-  );
+  const { data, error } = useData(getStandupSettings, {
+    cacheTags: [TAG_STANDUP_SETTINGS],
+  });
   const { register, handleSubmit, reset, control } = useForm<SettingsForm>({
     defaultValues: DEFAULT_FORM,
   });
@@ -176,21 +158,14 @@ function SettingsCard() {
     if (data) reset(wireToForm(data));
   }, [data, reset]);
 
-  const save = useSWRMutation(
-    "/api/apps/standup/settings",
-    (url: string, { arg }: { arg: SettingsWire }) =>
-      mutateRequest<SettingsWire>(url, { method: "PUT", json: arg }),
-    {
-      onSuccess: (saved) => {
-        if (saved) void mutate(saved, { revalidate: false });
-      },
-    },
-  );
+  const save = useMutation(putStandupSettings, {
+    onSuccess: () => void invalidate(TAG_STANDUP_SETTINGS),
+  });
 
   const onSave = handleSubmit(async (form) => {
     setFeedback(null);
     try {
-      await save.trigger(formToWire(form));
+      await save.trigger({ body: formToWire(form) });
       setFeedback({ tone: "ok", text: "settings saved" });
     } catch (e) {
       setFeedback({ tone: "error", text: errMessage(e) });
@@ -199,7 +174,9 @@ function SettingsCard() {
 
   return (
     <div className="action-card">
-      {error && <p className="error">Failed to load: {errMessage(error)}</p>}
+      {error !== undefined && (
+        <p className="error">Failed to load: {errMessage(error)}</p>
+      )}
       <p className="muted help-text">
         Changes apply live — the scheduler and chat bot reload on each pass, no
         restart. Secrets &amp; bindings (chat, folder, Lark app) stay in the
