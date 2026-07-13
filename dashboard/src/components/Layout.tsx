@@ -1,5 +1,12 @@
 import { Button } from "@base-ui/react/button";
 import { Tabs } from "@base-ui/react/tabs";
+import {
+  GearSixIcon,
+  LightningIcon,
+  PlugsConnectedIcon,
+  PulseIcon,
+  SquaresFourIcon,
+} from "@phosphor-icons/react";
 import { Link, Outlet, useLocation } from "react-router";
 import { revalidateMe, useMe } from "../lib/auth";
 import { useMutation } from "../lib/tayori";
@@ -8,19 +15,20 @@ import { OpenConsoleBanner } from "./OpenConsoleBanner";
 
 // Top-level navigation. The per-app pages (Linear/GitHub/GitLab/X/Standup/
 // Minutes) are reached by clicking into an app from the Apps overview, not from
-// here — so they stay out of the header to keep it from growing with every app.
+// here — so they stay out of the sidebar to keep it from growing with every app.
 const TABS = [
-  { to: "/status", label: "Apps" },
-  { to: "/actions", label: "Actions" },
-  { to: "/lark-apps", label: "Lark Apps" },
-  { to: "/config", label: "Config" },
-  { to: "/events", label: "Events" },
+  { to: "/status", label: "Apps", Icon: SquaresFourIcon },
+  { to: "/actions", label: "Actions", Icon: LightningIcon },
+  { to: "/lark-apps", label: "Lark Apps", Icon: PlugsConnectedIcon },
+  { to: "/config", label: "Config", Icon: GearSixIcon },
+  { to: "/events", label: "Events", Icon: PulseIcon },
 ] as const;
 
-/// The console shell: a Base UI Tabs bar whose value is driven by the URL (each
-/// tab is rendered AS a react-router `<Link>`), plus the routed content via
-/// `<Outlet>`. The router stays the single source of truth — Base UI supplies
-/// the widget semantics, keyboard navigation, and active styling.
+/// The console shell, Linear-style: a sidebar resting on the canvas (wordmark,
+/// vertical nav, session footer) beside a floating content window — a lifted
+/// surface panel inset from the viewport edges. Base UI Tabs still supplies the
+/// nav semantics and keyboard navigation (each tab renders AS a react-router
+/// `<Link>`); the router stays the single source of truth.
 export function Layout() {
   const { pathname } = useLocation();
   const current = TABS.find((t) => pathname.startsWith(t.to))?.to ?? "/status";
@@ -40,18 +48,21 @@ export function Layout() {
 
   return (
     <div className="app">
-      <header className="app-header">
+      <aside className="sidebar">
         <div className="app-title">LarkStack Console</div>
-        <Tabs.Root value={current}>
-          <Tabs.List className="tabs">
+        <Tabs.Root className="nav-root" value={current} orientation="vertical">
+          <Tabs.List className="nav">
             {TABS.map((t) => (
               <Tabs.Tab
                 key={t.to}
                 value={t.to}
                 nativeButton={false}
-                className={(state) => (state.active ? "tab active" : "tab")}
+                className={(state) =>
+                  state.active ? "nav-item active" : "nav-item"
+                }
                 render={<Link to={t.to} />}
               >
+                <t.Icon className="nav-icon" size={16} weight="regular" />
                 {t.label}
               </Tabs.Tab>
             ))}
@@ -75,10 +86,12 @@ export function Layout() {
             </Button>
           </div>
         )}
-      </header>
-      <main>
-        <OpenConsoleBanner />
-        <Outlet />
+      </aside>
+      <main className="content-window">
+        <div className="content-inner">
+          <OpenConsoleBanner />
+          <Outlet />
+        </div>
       </main>
     </div>
   );
