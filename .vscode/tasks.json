@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "console: run",
+      "type": "shell",
+      "command": "cargo run -p console",
+      "problemMatcher": ["$rustc"],
+      "isBackground": true,
+      "presentation": { "panel": "dedicated" }
+    },
+    {
+      "label": "dashboard: dev",
+      "type": "shell",
+      "command": "pnpm dev",
+      "options": { "cwd": "${workspaceFolder}/dashboard" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated" }
+    },
+    {
+      "label": "dashboard: build (embedded)",
+      "type": "shell",
+      "command": "pnpm build",
+      "options": { "cwd": "${workspaceFolder}/dashboard" },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "sdk: regenerate",
+      "type": "shell",
+      "command": "cargo xtask dump-openapi && cd dashboard && pnpm generate",
+      "problemMatcher": ["$rustc"]
+    },
+    {
+      "label": "check: all",
+      "type": "shell",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo test --workspace && cd dashboard && pnpm check && pnpm build",
+      "problemMatcher": ["$rustc", "$tsc"],
+      "group": { "kind": "test", "isDefault": true }
+    },
+    {
+      "label": "dev: console + dashboard",
+      "dependsOn": ["console: run", "dashboard: dev"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug console",
+      "cargo": {
+        "args": ["build", "-p", "console"],
+        "filter": { "name": "larkstack-console", "kind": "bin" }
+      },
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "CONSOLE_PORT": "8080",
+        "CONSOLE_DATA_DIR": "${workspaceFolder}/data"
+      }
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug standup (standalone bin)",
+      "cargo": {
+        "args": ["build", "-p", "standup"],
+        "filter": { "name": "standup", "kind": "bin" }
+      },
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug larkstack-core tests",
+      "cargo": {
+        "args": ["test", "--no-run", "-p", "larkstack-core"],
+        "filter": { "name": "larkstack-core", "kind": "lib" }
+      },
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
