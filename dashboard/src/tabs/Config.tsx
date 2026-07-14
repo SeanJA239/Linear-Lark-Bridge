@@ -1,11 +1,59 @@
 import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
+import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { invalidate, TAG_CONFIG } from "../lib/cache";
 import { errMessage } from "../lib/errors";
 import { useData, useMutation } from "../lib/tayori";
 import { getConfig, putConfig } from "../sdk";
+import { button, filters } from "../theme/shared";
+import { colors, effects, fonts, radii } from "../theme/tokens.stylex";
+
+const s = stylex.create({
+  header: {
+    display: "flex",
+    alignItems: "baseline",
+    justifyContent: "space-between",
+    gap: "1rem",
+    flexWrap: "wrap",
+  },
+  headerTitle: {
+    margin: 0,
+  },
+  saved: {
+    fontVariantNumeric: "tabular-nums",
+    color: colors.success,
+  },
+  editor: {
+    width: "100%",
+    minHeight: "22rem",
+    fontFamily: fonts.mono,
+    fontSize: "0.82rem",
+    lineHeight: 1.6,
+    padding: "1rem 1.1rem",
+    borderColor: {
+      default: colors.hairline,
+      ":focus": colors.hairlineStrong,
+      ":focus-visible": colors.hairlineStrong,
+    },
+    borderStyle: "solid",
+    borderWidth: "1px",
+    borderRadius: radii.lg,
+    backgroundColor: colors.canvas,
+    color: colors.ink,
+    resize: "vertical",
+    marginTop: "0.6rem",
+    outline: { ":focus": "none", ":focus-visible": "none" },
+    boxShadow: {
+      ":focus": effects.focusRing,
+      ":focus-visible": effects.focusRing,
+    },
+    opacity: { ":disabled": 0.55 },
+    transitionProperty: "border-color, box-shadow",
+    transitionDuration: "0.15s",
+  },
+});
 
 interface ConfigForm {
   config: string;
@@ -49,14 +97,15 @@ export function Config() {
 
   return (
     <section>
-      <header className="events-header">
-        <h2>Configuration</h2>
-        <div className="filters">
+      <header {...stylex.props(s.header)}>
+        <h2 {...stylex.props(s.headerTitle)}>Configuration</h2>
+        <div {...stylex.props(filters.row)}>
           {errors.root?.message && (
             <span className="error">{errors.root.message}</span>
           )}
-          {saved && <span className="conn ok">saved</span>}
+          {saved && <span {...stylex.props(s.saved)}>saved</span>}
           <Button
+            className={stylex.props(button.secondary).className}
             type="button"
             onClick={onSubmit}
             disabled={!isDirty || isSubmitting || isLoading}
@@ -70,7 +119,7 @@ export function Config() {
       )}
       <Field.Root>
         <Field.Control
-          className="config-editor"
+          className={stylex.props(s.editor).className}
           disabled={isLoading || data === undefined}
           render={<textarea spellCheck={false} />}
           {...register("config")}

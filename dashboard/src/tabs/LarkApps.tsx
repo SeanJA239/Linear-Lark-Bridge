@@ -1,11 +1,13 @@
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { Button } from "@base-ui/react/button";
+import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 import { RegisterLarkApp } from "../components/RegisterLarkApp";
 import { invalidate, TAG_LARK_APPS } from "../lib/cache";
 import { errMessage } from "../lib/errors";
 import { useData, useMutation } from "../lib/tayori";
 import { deleteLarkApp, type LarkAppView, listLarkApps } from "../sdk";
+import { button, dialog, text } from "../theme/shared";
 
 export function LarkApps() {
   const { data, error } = useData(listLarkApps, { cacheTags: [TAG_LARK_APPS] });
@@ -34,7 +36,7 @@ export function LarkApps() {
   return (
     <section>
       <h2>Lark Apps</h2>
-      <p className="muted help-text">
+      <p {...stylex.props(text.help)}>
         Credentials are shared here and referenced from an app's config with{" "}
         <code>lark_app = "&lt;name&gt;"</code>. Saving live-tests the
         credentials against Lark and only persists if they work.
@@ -79,11 +81,16 @@ export function LarkApps() {
                   )}
                 </td>
                 <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                  <Button className="action-btn" onClick={() => setEditing(a)}>
+                  <Button
+                    className={stylex.props(button.action).className}
+                    onClick={() => setEditing(a)}
+                  >
                     Edit
                   </Button>{" "}
                   <Button
-                    className="action-btn error"
+                    className={
+                      stylex.props(button.action, button.actionError).className
+                    }
                     onClick={() => setTarget(a.name)}
                   >
                     Delete
@@ -95,7 +102,7 @@ export function LarkApps() {
         </table>
       )}
       {apps && apps.length === 0 && (
-        <p className="muted help-text">No Lark apps registered yet.</p>
+        <p {...stylex.props(text.help)}>No Lark apps registered yet.</p>
       )}
 
       <AlertDialog.Root
@@ -105,23 +112,29 @@ export function LarkApps() {
         }}
       >
         <AlertDialog.Portal>
-          <AlertDialog.Backdrop className="dialog-backdrop" />
-          <AlertDialog.Popup className="dialog-popup">
-            <AlertDialog.Title className="dialog-title">
+          <AlertDialog.Backdrop
+            className={stylex.props(dialog.backdrop).className}
+          />
+          <AlertDialog.Popup className={stylex.props(dialog.popup).className}>
+            <AlertDialog.Title className={stylex.props(dialog.title).className}>
               Delete lark-app "{target}"?
             </AlertDialog.Title>
-            <AlertDialog.Description className="dialog-desc">
+            <AlertDialog.Description
+              className={stylex.props(dialog.desc).className}
+            >
               Apps bound to it will error. This cannot be undone.
             </AlertDialog.Description>
-            <div className="dialog-actions">
+            <div {...stylex.props(dialog.actions)}>
               <AlertDialog.Close
-                className="action-btn"
+                className={stylex.props(button.action).className}
                 disabled={remove.isMutating}
               >
                 Cancel
               </AlertDialog.Close>
               <Button
-                className="action-btn error"
+                className={
+                  stylex.props(button.action, button.actionError).className
+                }
                 type="button"
                 onClick={confirmDelete}
                 disabled={remove.isMutating}

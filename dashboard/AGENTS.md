@@ -17,6 +17,7 @@ pnpm generate     # openapi.json -> src/sdk/ (after `cargo xtask dump-openapi`)
 
 - **Base UI** (`@base-ui/react`) for all controls — prefer it over hand-rolled HTML
   controls. Known gaps in v1.5.0 (no spinner, no textarea) are the only exceptions.
+- **StyleX** (`@stylexjs/stylex`) for all component styling — see *Styling* below.
 - **react-router** (`src/App.tsx` routes), **react-hook-form** for forms, **foxact**
   utility hooks, **@phosphor-icons/react** for UI icons (16px, one family — never
   hand-roll SVG icons; brand logos come from `@icons-pack/react-simple-icons`).
@@ -39,6 +40,35 @@ functions + zod schemas in `src/lib/{routing,linear,standup}-api.ts`, consumed b
 hooks. `ky` is pinned to `^1` — `@hey-api/client-ky`'s error path double-reads the
 response body under ky 2.
 
+## Styling (StyleX)
+
+Compile-time **StyleX**, integrated via the official `@stylexjs/unplugin` in
+`vite.config.ts` (plugin-react v6 is oxc-based, so the Babel-plugin route is
+unavailable); dev serves aggregated CSS through `virtual:stylex:runtime`, imported
+conditionally in `main.tsx`.
+
+- `src/theme/tokens.stylex.ts` — the design tokens (`stylex.defineVars`), sourced from
+  `DESIGN.md`. Extend the tokens, never inline hex values in components.
+- `src/theme/shared.ts` — cross-component styles (cards, form fields, buttons, filters,
+  banners, dialogs, mono). Single-component styles live next to that component in a
+  local `stylex.create`.
+- `src/theme/global.css` — document base only: reset, `body`, `h1/h2/a/table` element
+  defaults, and the `muted`/`error` text utilities. Nothing component-shaped goes here.
+
+Hard-won rules:
+
+- **Longhands only.** `background:` is silently dropped under the default
+  `property-specificity` resolution — use `backgroundColor` (and longhand
+  `borderColor`/`borderStyle`/`borderWidth`). `padding`/`margin` multi-value shorthands
+  are fine.
+- No descendant/attribute/sibling selectors. Base UI state styling goes through
+  className **functions**: `className={(state) => stylex.props(s.x, state.checked && s.y).className ?? ""}`.
+  Never spread `stylex.props(...)` onto a Base UI component (plain DOM elements only).
+- Condition objects that cross a `StyleXStyles`-typed prop boundary need a `default`
+  branch (`{ default: null, ":hover": … }`) or the type won't collapse.
+- `<Select>` accepts `trigger?: stylex.StyleXStyles`; form fields pass
+  `[field.input, field.selectTrigger]`.
+
 ## Design system
 
 `DESIGN.md` (repo root) is the visual spec: the Linear design language — near-black
@@ -47,7 +77,5 @@ surfaces), lavender-blue `#5e6ad2` as the **only** accent (brand mark, primary C
 focus rings, links), Inter/system-sans, JetBrains Mono for code surfaces.
 
 The shell is the Linear app idiom: a sidebar on the canvas beside a floating content
-window (`src/components/Layout.tsx`). All styling is token-driven plain CSS in
-`src/styles.css` (`:root` custom properties) — extend the tokens, don't inline hex values.
-Semantic colors: success green for app on/off state, lavender for selection, red/amber
-reserved for errors/warnings.
+window (`src/components/Layout.tsx`). Semantic colors: success green for app on/off
+state, lavender for selection, red/amber reserved for errors/warnings.

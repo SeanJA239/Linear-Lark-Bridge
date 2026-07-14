@@ -1,6 +1,7 @@
 import { AlertDialog } from "@base-ui/react/alert-dialog";
 import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
+import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 import { type Control, Controller, useForm } from "react-hook-form";
 import { Checkbox } from "../components/Checkbox";
@@ -22,6 +23,42 @@ import {
   upsertUserMap,
 } from "../lib/linear-api";
 import { useData, useMutation } from "../lib/tayori";
+// Aliased: react-hook-form render props also destructure a `field`.
+import {
+  button,
+  card,
+  dialog,
+  field as fieldStyle,
+  filters,
+  text,
+} from "../theme/shared";
+import { colors, fonts } from "../theme/tokens.stylex";
+
+const s = stylex.create({
+  subsystem: {
+    fontFamily: fonts.mono,
+    fontSize: "0.82rem",
+    color: colors.muted,
+    marginBottom: "0.6rem",
+  },
+  fields: {
+    display: "grid",
+    gap: "0.45rem",
+    marginTop: "0.7rem",
+    paddingTop: "0.7rem",
+    borderTopColor: colors.hairlineStrong,
+    borderTopStyle: "dashed",
+    borderTopWidth: "1px",
+  },
+  filtersSpaced: {
+    marginTop: "0.75rem",
+  },
+  // The user-map card sits further below the settings card than the default
+  // stacked-card rhythm.
+  userMapCard: {
+    marginTop: "1.5rem",
+  },
+});
 
 type Feedback = { tone: "ok" | "error"; text: string } | null;
 
@@ -82,8 +119,10 @@ function CheckboxField({
   control: Control<SettingsForm>;
 }) {
   return (
-    <Field.Root className="field">
-      <Field.Label className="field-label">{label}</Field.Label>
+    <Field.Root className={stylex.props(fieldStyle.row).className}>
+      <Field.Label className={stylex.props(fieldStyle.label).className}>
+        {label}
+      </Field.Label>
       <Controller
         control={control}
         name={name}
@@ -129,19 +168,19 @@ function SettingsCard() {
   });
 
   return (
-    <div className="action-card">
-      <div className="actions-subsystem">behavior settings</div>
+    <div {...stylex.props(card.base, card.stacked)}>
+      <div {...stylex.props(s.subsystem)}>behavior settings</div>
       {error !== undefined && (
         <p className="error">Failed to load: {errMessage(error)}</p>
       )}
 
-      <p className="muted help-text">
+      <p {...stylex.props(text.help)}>
         Subscriber fan-out &amp; due-date reminders need{" "}
         <code>LINEAR_API_KEY</code> set (to resolve subscriber emails / poll due
         dates). Changes apply live — no restart.
       </p>
 
-      <div className="action-fields">
+      <div {...stylex.props(s.fields)}>
         <CheckboxField
           label="Notify subscribers on comments"
           name="subscriber_on_comment"
@@ -163,14 +202,16 @@ function SettingsCard() {
           control={control}
         />
 
-        <Field.Root className="field">
-          <Field.Label className="field-label">Reminder recipients</Field.Label>
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
+            Reminder recipients
+          </Field.Label>
           <Controller
             control={control}
             name="reminder_recipients"
             render={({ field }) => (
               <Select
-                className="field-input field-select"
+                trigger={[fieldStyle.input, fieldStyle.selectTrigger]}
                 value={field.value}
                 onValueChange={field.onChange}
                 options={[
@@ -185,33 +226,35 @@ function SettingsCard() {
           />
         </Field.Root>
 
-        <Field.Root className="field">
-          <Field.Label className="field-label">Reminder lead days</Field.Label>
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
+            Reminder lead days
+          </Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(fieldStyle.input).className}
             placeholder="7, 3, 1, 0"
             {...register("reminder_lead_days")}
           />
         </Field.Root>
 
-        <Field.Root className="field">
-          <Field.Label className="field-label">
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
             Overdue reminders cap (days)
           </Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(fieldStyle.input).className}
             type="number"
             min={0}
             {...register("reminder_overdue_max_days", { valueAsNumber: true })}
           />
         </Field.Root>
 
-        <Field.Root className="field">
-          <Field.Label className="field-label">
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
             Check interval (hours)
           </Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(fieldStyle.input).className}
             type="number"
             min={1}
             {...register("reminder_check_interval_hours", {
@@ -220,22 +263,33 @@ function SettingsCard() {
           />
         </Field.Root>
 
-        <Field.Root className="field">
-          <Field.Label className="field-label">Timezone (IANA)</Field.Label>
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
+            Timezone (IANA)
+          </Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(fieldStyle.input).className}
             placeholder="UTC"
             {...register("reminder_timezone")}
           />
         </Field.Root>
       </div>
 
-      <div className="filters" style={{ marginTop: "0.75rem" }}>
-        <Button type="button" onClick={onSave} disabled={save.isMutating}>
+      <div {...stylex.props(filters.row, s.filtersSpaced)}>
+        <Button
+          className={stylex.props(button.secondary).className}
+          type="button"
+          onClick={onSave}
+          disabled={save.isMutating}
+        >
           {save.isMutating ? "Saving…" : "Save settings"}
         </Button>
         {feedback && (
-          <span className={`action-result ${feedback.tone}`}>
+          <span
+            {...stylex.props(
+              feedback.tone === "ok" ? text.resultOk : text.resultError,
+            )}
+          >
             {feedback.text}
           </span>
         )}
@@ -309,62 +363,85 @@ function UserMapCard() {
   };
 
   return (
-    <div className="action-card" style={{ marginTop: "1.5rem" }}>
-      <div className="actions-subsystem">user map (Linear → Lark email)</div>
-      <p className="muted help-text">
+    <div {...stylex.props(card.base, s.userMapCard)}>
+      <div {...stylex.props(s.subsystem)}>user map (Linear → Lark email)</div>
+      <p {...stylex.props(text.help)}>
         Override the DM target when a person's Linear and Lark emails differ.
         When they match, no entry is needed.
       </p>
 
-      <div className="action-fields">
-        <Field.Root className="field" invalid={!!errors.linear_email}>
-          <Field.Label className="field-label">
-            linear_email<span className="req"> *</span>
+      <div {...stylex.props(s.fields)}>
+        <Field.Root
+          className={stylex.props(fieldStyle.row).className}
+          invalid={!!errors.linear_email}
+        >
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
+            linear_email<span {...stylex.props(fieldStyle.required)}> *</span>
           </Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(fieldStyle.input).className}
             placeholder="alice@linear.example"
             {...register("linear_email", {
               required: "linear_email is required",
             })}
           />
           {errors.linear_email && (
-            <Field.Error className="field-error" match>
+            <Field.Error
+              className={stylex.props(fieldStyle.error).className}
+              match
+            >
               {errors.linear_email.message}
             </Field.Error>
           )}
         </Field.Root>
-        <Field.Root className="field" invalid={!!errors.lark_email}>
-          <Field.Label className="field-label">
-            lark_email<span className="req"> *</span>
+        <Field.Root
+          className={stylex.props(fieldStyle.row).className}
+          invalid={!!errors.lark_email}
+        >
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
+            lark_email<span {...stylex.props(fieldStyle.required)}> *</span>
           </Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(fieldStyle.input).className}
             placeholder="alice@lark.example"
             {...register("lark_email", { required: "lark_email is required" })}
           />
           {errors.lark_email && (
-            <Field.Error className="field-error" match>
+            <Field.Error
+              className={stylex.props(fieldStyle.error).className}
+              match
+            >
               {errors.lark_email.message}
             </Field.Error>
           )}
         </Field.Root>
-        <Field.Root className="field">
-          <Field.Label className="field-label">note</Field.Label>
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
+            note
+          </Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(fieldStyle.input).className}
             placeholder="optional"
             {...register("note")}
           />
         </Field.Root>
       </div>
 
-      <div className="filters" style={{ marginTop: "0.75rem" }}>
-        <Button type="button" onClick={onSave} disabled={save.isMutating}>
+      <div {...stylex.props(filters.row, s.filtersSpaced)}>
+        <Button
+          className={stylex.props(button.secondary).className}
+          type="button"
+          onClick={onSave}
+          disabled={save.isMutating}
+        >
           {save.isMutating ? "Saving…" : "Save mapping"}
         </Button>
         {feedback && (
-          <span className={`action-result ${feedback.tone}`}>
+          <span
+            {...stylex.props(
+              feedback.tone === "ok" ? text.resultOk : text.resultError,
+            )}
+          >
             {feedback.text}
           </span>
         )}
@@ -395,7 +472,9 @@ function UserMapCard() {
                 <td className="muted">{m.note ?? ""}</td>
                 <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
                   <Button
-                    className="action-btn error"
+                    className={
+                      stylex.props(button.action, button.actionError).className
+                    }
                     onClick={() => setTarget(m.linear_email)}
                   >
                     Delete
@@ -407,7 +486,7 @@ function UserMapCard() {
         </table>
       )}
       {rows && rows.length === 0 && (
-        <p className="muted help-text">No overrides yet.</p>
+        <p {...stylex.props(text.help)}>No overrides yet.</p>
       )}
 
       <AlertDialog.Root
@@ -417,23 +496,29 @@ function UserMapCard() {
         }}
       >
         <AlertDialog.Portal>
-          <AlertDialog.Backdrop className="dialog-backdrop" />
-          <AlertDialog.Popup className="dialog-popup">
-            <AlertDialog.Title className="dialog-title">
+          <AlertDialog.Backdrop
+            className={stylex.props(dialog.backdrop).className}
+          />
+          <AlertDialog.Popup className={stylex.props(dialog.popup).className}>
+            <AlertDialog.Title className={stylex.props(dialog.title).className}>
               Delete mapping for "{target}"?
             </AlertDialog.Title>
-            <AlertDialog.Description className="dialog-desc">
+            <AlertDialog.Description
+              className={stylex.props(dialog.desc).className}
+            >
               DMs will fall back to the Linear email. This cannot be undone.
             </AlertDialog.Description>
-            <div className="dialog-actions">
+            <div {...stylex.props(dialog.actions)}>
               <AlertDialog.Close
-                className="action-btn"
+                className={stylex.props(button.action).className}
                 disabled={remove.isMutating}
               >
                 Cancel
               </AlertDialog.Close>
               <Button
-                className="action-btn error"
+                className={
+                  stylex.props(button.action, button.actionError).className
+                }
                 type="button"
                 onClick={confirmDelete}
                 disabled={remove.isMutating}

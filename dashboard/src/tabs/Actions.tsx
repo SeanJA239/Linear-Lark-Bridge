@@ -1,11 +1,50 @@
 import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
+import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router";
 import { errMessage } from "../lib/errors";
 import { useMutation } from "../lib/tayori";
 import { dispatchAction } from "../sdk";
+import { button, card, field, text } from "../theme/shared";
+import { colors, fonts } from "../theme/tokens.stylex";
+
+const s = stylex.create({
+  group: {
+    marginBottom: "1.75rem",
+  },
+  subsystem: {
+    fontFamily: fonts.mono,
+    fontSize: "0.82rem",
+    color: colors.muted,
+    marginBottom: "0.6rem",
+  },
+  cards: {
+    display: "grid",
+    gap: "0.6rem",
+  },
+  head: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: "1rem",
+  },
+  name: {
+    fontSize: "0.92rem",
+    fontWeight: 600,
+    color: colors.ink,
+  },
+  fields: {
+    display: "grid",
+    gap: "0.45rem",
+    marginTop: "0.7rem",
+    paddingTop: "0.7rem",
+    borderTopColor: colors.hairlineStrong,
+    borderTopStyle: "dashed",
+    borderTopWidth: "1px",
+  },
+});
 
 interface ActionParam {
   name: string;
@@ -166,14 +205,20 @@ function ActionCard({
   });
 
   return (
-    <div className="action-card">
-      <div className="action-card-head">
+    <div {...stylex.props(card.base)}>
+      <div {...stylex.props(s.head)}>
         <div>
-          <code className="action-name">{action.name}</code>
-          <div className="muted help-text">{action.description}</div>
+          <code {...stylex.props(s.name)}>{action.name}</code>
+          <div {...stylex.props(text.help)}>{action.description}</div>
         </div>
         <Button
-          className={`action-btn ${result?.tone ?? ""}`}
+          className={
+            stylex.props(
+              button.action,
+              result?.tone === "ok" && button.actionOk,
+              result?.tone === "error" && button.actionError,
+            ).className
+          }
           type="button"
           onClick={onRun}
           disabled={fire.isMutating}
@@ -182,19 +227,26 @@ function ActionCard({
         </Button>
       </div>
       {params.length > 0 && (
-        <div className="action-fields">
+        <div {...stylex.props(s.fields)}>
           {params.map((p) => (
             <Field.Root
               key={p.name}
-              className="field"
+              className={stylex.props(field.row).className}
               invalid={!!errors[p.name]}
             >
-              <Field.Label className="field-label">
+              <Field.Label className={stylex.props(field.label).className}>
                 {p.label}
-                {p.required && <span className="req"> *</span>}
+                {p.required && (
+                  <span {...stylex.props(field.required)}> *</span>
+                )}
               </Field.Label>
               <Field.Control
-                className="field-input"
+                className={
+                  stylex.props(
+                    field.input,
+                    !!errors[p.name] && field.inputInvalid,
+                  ).className
+                }
                 placeholder={p.placeholder}
                 {...register(
                   p.name,
@@ -202,7 +254,10 @@ function ActionCard({
                 )}
               />
               {errors[p.name] && (
-                <Field.Error className="field-error" match>
+                <Field.Error
+                  className={stylex.props(field.error).className}
+                  match
+                >
                   {errors[p.name]?.message}
                 </Field.Error>
               )}
@@ -211,7 +266,13 @@ function ActionCard({
         </div>
       )}
       {result && (
-        <div className={`action-result ${result.tone}`}>{result.text}</div>
+        <div
+          {...stylex.props(
+            result.tone === "ok" ? text.resultOk : text.resultError,
+          )}
+        >
+          {result.text}
+        </div>
       )}
     </div>
   );
@@ -221,17 +282,17 @@ export function Actions() {
   return (
     <section>
       <h2>Actions</h2>
-      <p className="muted help-text">
+      <p {...stylex.props(text.help)}>
         Dispatch is fire-and-forget. The outcome of each action shows up in the{" "}
         <Link to="/events">Events</Link> tab.
       </p>
       {Object.entries(CATALOG).map(([subsystem, actions]) => (
-        <div key={subsystem} className="actions-group">
-          <div className="actions-subsystem">{subsystem}</div>
+        <div key={subsystem} {...stylex.props(s.group)}>
+          <div {...stylex.props(s.subsystem)}>{subsystem}</div>
           {actions.length === 0 ? (
-            <div className="muted help-text">no actions defined yet</div>
+            <div {...stylex.props(text.help)}>no actions defined yet</div>
           ) : (
-            <div className="action-cards">
+            <div {...stylex.props(s.cards)}>
               {actions.map((a) => (
                 <ActionCard key={a.name} subsystem={subsystem} action={a} />
               ))}

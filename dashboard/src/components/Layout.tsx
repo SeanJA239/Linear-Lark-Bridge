@@ -7,11 +7,153 @@ import {
   PulseIcon,
   SquaresFourIcon,
 } from "@phosphor-icons/react";
+import * as stylex from "@stylexjs/stylex";
 import { Link, Outlet, useLocation } from "react-router";
 import { revalidateMe, useMe } from "../lib/auth";
 import { useMutation } from "../lib/tayori";
 import { logout } from "../sdk";
+import { colors, effects, radii } from "../theme/tokens.stylex";
 import { OpenConsoleBanner } from "./OpenConsoleBanner";
+
+const MOBILE = "@media (max-width: 767px)";
+
+const s = stylex.create({
+  app: {
+    display: "flex",
+    flexDirection: { default: "row", [MOBILE]: "column" },
+    height: { default: "100dvh", [MOBILE]: "auto" },
+    minHeight: { default: null, [MOBILE]: "100dvh" },
+    // Base UI: own stacking context so popups layer above the app.
+    isolation: "isolate",
+  },
+  sidebar: {
+    flex: "none",
+    width: { default: "220px", [MOBILE]: "auto" },
+    display: "flex",
+    flexDirection: { default: "column", [MOBILE]: "row" },
+    alignItems: { default: "stretch", [MOBILE]: "center" },
+    gap: { default: "1.5rem", [MOBILE]: "1rem" },
+    padding: { default: "1.1rem 0.85rem 0.85rem", [MOBILE]: "0.7rem 0.85rem" },
+  },
+  appTitle: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.6rem",
+    padding: "0 0.6rem",
+    fontSize: "0.9rem",
+    fontWeight: 600,
+    letterSpacing: "-0.02em",
+    color: colors.ink,
+    whiteSpace: "nowrap",
+  },
+  // The wordmark's single drop of brand voltage: a small lavender mark.
+  brandMark: {
+    width: "0.62rem",
+    height: "0.62rem",
+    borderRadius: "3px",
+    backgroundColor: colors.primary,
+    flex: "none",
+  },
+  // Let the Tabs.Root wrapper shrink so the mobile nav strip scrolls instead
+  // of widening the page (flex children default to min-width: auto).
+  navRoot: {
+    minWidth: { [MOBILE]: 0 },
+  },
+  nav: {
+    display: "flex",
+    flexDirection: { default: "column", [MOBILE]: "row" },
+    gap: "2px",
+    overflowX: { default: null, [MOBILE]: "auto" },
+    scrollbarWidth: { default: null, [MOBILE]: "none" },
+  },
+  navItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.55rem",
+    flex: { [MOBILE]: "none" },
+    font: "inherit",
+    fontSize: "0.84rem",
+    fontWeight: 500,
+    letterSpacing: "-0.01em",
+    padding: "0.4rem 0.6rem",
+    borderStyle: "none",
+    borderRadius: radii.sm,
+    backgroundColor: {
+      default: "transparent",
+      ":hover": `color-mix(in srgb, ${colors.ink} 5%, transparent)`,
+    },
+    color: { default: colors.muted, ":hover": colors.ink },
+    textDecoration: "none",
+    cursor: "pointer",
+    outline: { ":focus-visible": "none" },
+    boxShadow: { ":focus-visible": effects.focusRing },
+    transitionProperty: "color, background-color",
+    transitionDuration: "0.15s",
+  },
+  // Active item reads as a lifted surface — the system's depth idiom.
+  navItemActive: {
+    backgroundColor: colors.surfaceCard,
+    color: colors.ink,
+  },
+  navIcon: {
+    flex: "none",
+  },
+  session: {
+    marginTop: { default: "auto", [MOBILE]: 0 },
+    marginLeft: { default: null, [MOBILE]: "auto" },
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "0.6rem",
+    padding: { default: "0 0.6rem", [MOBILE]: 0 },
+    minWidth: 0,
+  },
+  userChip: {
+    display: { default: null, [MOBILE]: "none" },
+    fontSize: "0.78rem",
+    color: colors.muted,
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  signout: {
+    font: "inherit",
+    fontSize: "0.72rem",
+    flex: "none",
+    padding: "0.28rem 0.6rem",
+    borderColor: { default: colors.hairlineStrong, ":hover": colors.mutedSoft },
+    borderStyle: "solid",
+    borderWidth: "1px",
+    borderRadius: radii.md,
+    backgroundColor: "transparent",
+    color: { default: colors.muted, ":hover": colors.ink },
+    cursor: "pointer",
+    transitionProperty: "border-color, color",
+    transitionDuration: "0.15s",
+  },
+  // The content window floats on the canvas: a lifted panel with a hairline
+  // border, a faint top-edge highlight, and an 8px gutter showing the canvas.
+  contentWindow: {
+    flex: 1,
+    minWidth: 0,
+    margin: { default: "8px 8px 8px 0", [MOBILE]: "0 8px 8px" },
+    overflowY: { default: "auto", [MOBILE]: "visible" },
+    backgroundColor: colors.window,
+    borderColor: colors.hairline,
+    borderStyle: "solid",
+    borderWidth: "1px",
+    borderRadius: radii.xl,
+    boxShadow: effects.edgeHighlight,
+    scrollbarWidth: "thin",
+    scrollbarColor: `${colors.hairlineStrong} transparent`,
+  },
+  contentInner: {
+    maxWidth: "1040px",
+    margin: "0 auto",
+    padding: { default: "2rem 2rem 4rem", [MOBILE]: "1.25rem 1.1rem 3rem" },
+  },
+});
 
 // Top-level navigation. The per-app pages (Linear/GitHub/GitLab/X/Standup/
 // Minutes) are reached by clicking into an app from the Apps overview, not from
@@ -47,36 +189,48 @@ export function Layout() {
   };
 
   return (
-    <div className="app">
-      <aside className="sidebar">
-        <div className="app-title">LarkStack Console</div>
-        <Tabs.Root className="nav-root" value={current} orientation="vertical">
-          <Tabs.List className="nav">
+    <div {...stylex.props(s.app)}>
+      <aside {...stylex.props(s.sidebar)}>
+        <div {...stylex.props(s.appTitle)}>
+          <span {...stylex.props(s.brandMark)} />
+          LarkStack Console
+        </div>
+        <Tabs.Root
+          className={stylex.props(s.navRoot).className}
+          value={current}
+          orientation="vertical"
+        >
+          <Tabs.List className={stylex.props(s.nav).className}>
             {TABS.map((t) => (
               <Tabs.Tab
                 key={t.to}
                 value={t.to}
                 nativeButton={false}
                 className={(state) =>
-                  state.active ? "nav-item active" : "nav-item"
+                  stylex.props(s.navItem, state.active && s.navItemActive)
+                    .className ?? ""
                 }
                 render={<Link to={t.to} />}
               >
-                <t.Icon className="nav-icon" size={16} weight="regular" />
+                <t.Icon
+                  {...stylex.props(s.navIcon)}
+                  size={16}
+                  weight="regular"
+                />
                 {t.label}
               </Tabs.Tab>
             ))}
           </Tabs.List>
         </Tabs.Root>
         {me?.authenticated && (
-          <div className="session">
+          <div {...stylex.props(s.session)}>
             {who && (
-              <span className="user-chip" title={me.user?.email}>
+              <span {...stylex.props(s.userChip)} title={me.user?.email}>
                 {who}
               </span>
             )}
             <Button
-              className="signout"
+              className={stylex.props(s.signout).className}
               type="button"
               onClick={onSignOut}
               disabled={signOut.isMutating}
@@ -87,8 +241,8 @@ export function Layout() {
           </div>
         )}
       </aside>
-      <main className="content-window">
-        <div className="content-inner">
+      <main {...stylex.props(s.contentWindow)}>
+        <div {...stylex.props(s.contentInner)}>
           <OpenConsoleBanner />
           <Outlet />
         </div>

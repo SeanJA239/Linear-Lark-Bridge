@@ -6,7 +6,13 @@ import { App } from "./App.tsx";
 import { revalidateMe } from "./lib/auth.ts";
 import { TayoriProvider } from "./lib/tayori.ts";
 import { createClient } from "./sdk/client";
-import "./styles.css";
+import "./theme/global.css";
+
+// StyleX dev loop: the unplugin serves aggregated CSS + an HMR refetcher
+// through virtual modules; production builds append into the CSS asset.
+if (import.meta.env.DEV) {
+  void import("virtual:stylex:runtime");
+}
 
 const root = document.getElementById("root");
 

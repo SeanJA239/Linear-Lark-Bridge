@@ -1,11 +1,28 @@
 import { Field } from "@base-ui/react/field";
+import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 import { Link } from "react-router";
 import { invalidate, TAG_APPS, TAG_LARK_APPS, TAG_STATUS } from "../lib/cache";
 import { errMessage } from "../lib/errors";
 import { useData, useMutation } from "../lib/tayori";
 import { listApps, listLarkApps, setAppLarkApp } from "../sdk";
+import { card, field, text } from "../theme/shared";
+import { colors, fonts } from "../theme/tokens.stylex";
 import { Select } from "./Select";
+
+const s = stylex.create({
+  subsystem: {
+    fontFamily: fonts.mono,
+    fontSize: "0.82rem",
+    color: colors.muted,
+    marginBottom: "0.6rem",
+  },
+  // Inside the binding card, help text sits a touch closer to the field than
+  // the shared text.help default.
+  bindingHelp: {
+    marginBottom: "0.9rem",
+  },
+});
 
 type Feedback = { tone: "ok" | "error"; text: string } | null;
 
@@ -47,19 +64,22 @@ export function LarkBinding({ appName }: { appName: string }) {
   };
 
   return (
-    <div className="action-card binding-card">
-      <div className="actions-subsystem">Lark app</div>
-      <p className="muted help-text">
+    <div {...stylex.props(card.base, card.binding)}>
+      <div {...stylex.props(s.subsystem)}>Lark app</div>
+      <p {...stylex.props(text.help, s.bindingHelp)}>
         The Lark credentials this app delivers with. Manage the registry in the{" "}
         <Link to="/lark-apps">Lark Apps</Link> tab.
       </p>
-      <Field.Root className="field">
-        <Field.Label className="field-label" htmlFor={`lark-app-${appName}`}>
+      <Field.Root className={stylex.props(field.row).className}>
+        <Field.Label
+          className={stylex.props(field.label).className}
+          htmlFor={`lark-app-${appName}`}
+        >
           bound app
         </Field.Label>
         <Select
           id={`lark-app-${appName}`}
-          className="field-input field-select"
+          trigger={[field.input, field.selectTrigger]}
           value={current}
           disabled={bind.isMutating || apps.length === 0}
           onValueChange={onChange}
@@ -70,13 +90,17 @@ export function LarkBinding({ appName }: { appName: string }) {
         />
       </Field.Root>
       {apps.length === 0 && (
-        <p className="muted help-text">
+        <p {...stylex.props(text.help, s.bindingHelp)}>
           No Lark apps registered yet — add one in the{" "}
           <Link to="/lark-apps">Lark Apps</Link> tab first.
         </p>
       )}
       {feedback && (
-        <span className={`action-result ${feedback.tone}`}>
+        <span
+          {...stylex.props(
+            feedback.tone === "ok" ? text.resultOk : text.resultError,
+          )}
+        >
           {feedback.text}
         </span>
       )}

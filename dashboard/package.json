@@ -19,6 +19,7 @@
     "@base-ui/react": "^1.5.0",
     "@icons-pack/react-simple-icons": "^13.13.0",
     "@phosphor-icons/react": "^2.1.10",
+    "@stylexjs/stylex": "^0.19.0",
     "foxact": "^0.3.5",
     "ky": "^1.14.3",
     "react": "^19.2.6",
@@ -32,6 +33,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.0",
     "@hey-api/openapi-ts": "^0.99.0",
+    "@stylexjs/unplugin": "^0.19.0",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",

@@ -1,0 +1,91 @@
+/* Document-level base for the console. Component styling lives in StyleX
+   (tokens in src/theme/tokens.stylex.ts); only the reset, element defaults,
+   and the two text utilities belong here. Literal colors mirror the tokens. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: #010102; /* colors.canvas */
+  color: #d0d6e0; /* colors.body */
+  font-family:
+    "Inter", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Helvetica,
+    Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-synthesis-weight: none;
+  /* Base UI: positioned ancestor for portaled popups (Dialog/Popover). */
+  position: relative;
+}
+
+h1 {
+  font-size: 1.6rem;
+  font-weight: 600; /* Linear display weight — never 700+ */
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: #f7f8f8; /* colors.ink */
+  margin: 0 0 1.5rem;
+}
+
+/* Section labels: the caption-uppercase token. */
+h2 {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #8a8f98; /* colors.muted */
+  margin: 0 0 0.85rem;
+}
+
+section + section {
+  margin-top: 2.5rem;
+}
+
+/* Link emphasis — one of the four sanctioned uses of the accent. The lighter
+   hover tint carries better than the raw primary on dark surfaces. */
+a {
+  color: #828fff; /* colors.primaryHover */
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  color: #f7f8f8; /* colors.ink */
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid #23252a; /* colors.hairline */
+}
+
+th {
+  font-weight: 500;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #8a8f98; /* colors.muted */
+}
+
+.muted {
+  color: #8a8f98; /* colors.muted */
+}
+
+.error {
+  color: #eb5e56; /* colors.error */
+}

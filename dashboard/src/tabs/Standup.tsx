@@ -1,6 +1,7 @@
 import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
 import { Input } from "@base-ui/react/input";
+import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 import {
   type Control,
@@ -18,6 +19,48 @@ import {
   type StandupSettings,
 } from "../lib/standup-api";
 import { useData, useMutation } from "../lib/tayori";
+// Aliased: react-hook-form render props also destructure a `field`, and
+// TemplateField takes a `field` prop.
+import {
+  button,
+  card,
+  field as fieldStyle,
+  filters,
+  text,
+} from "../theme/shared";
+import { colors, fonts } from "../theme/tokens.stylex";
+
+const s = stylex.create({
+  subsystem: {
+    fontFamily: fonts.mono,
+    fontSize: "0.82rem",
+    color: colors.muted,
+    marginBottom: "0.6rem",
+  },
+  subsystemSpaced: {
+    marginTop: "1rem",
+  },
+  fields: {
+    display: "grid",
+    gap: "0.45rem",
+    marginTop: "0.7rem",
+    paddingTop: "0.7rem",
+    borderTopColor: colors.hairlineStrong,
+    borderTopStyle: "dashed",
+    borderTopWidth: "1px",
+  },
+  filtersSpaced: {
+    marginTop: "0.75rem",
+  },
+  // The time picker shouldn't stretch to the grid column.
+  time: {
+    width: "auto",
+  },
+  template: {
+    fontFamily: "monospace",
+    resize: "vertical",
+  },
+});
 
 type Feedback = { tone: "ok" | "error"; text: string } | null;
 
@@ -83,13 +126,14 @@ function ScheduleRow({
   control: Control<SettingsForm>;
 }) {
   return (
-    <Field.Root className="field">
-      <Field.Label className="field-label">{label}</Field.Label>
+    <Field.Root className={stylex.props(fieldStyle.row).className}>
+      <Field.Label className={stylex.props(fieldStyle.label).className}>
+        {label}
+      </Field.Label>
       <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
         <Input
           type="time"
-          className="field-input"
-          style={{ width: "auto" }}
+          className={stylex.props(fieldStyle.input, s.time).className}
           {...time}
         />
         <label
@@ -126,8 +170,8 @@ function TemplateField({
   field: UseFormRegisterReturn;
 }) {
   return (
-    <Field.Root className="field">
-      <Field.Label className="field-label">
+    <Field.Root className={stylex.props(fieldStyle.row).className}>
+      <Field.Label className={stylex.props(fieldStyle.label).className}>
         {label}
         <br />
         <span className="muted" style={{ fontWeight: 400, fontSize: "0.8em" }}>
@@ -135,8 +179,7 @@ function TemplateField({
         </span>
       </Field.Label>
       <Field.Control
-        className="field-input"
-        style={{ fontFamily: "monospace", resize: "vertical" }}
+        className={stylex.props(fieldStyle.input, s.template).className}
         render={<textarea rows={4} />}
         {...field}
       />
@@ -173,22 +216,24 @@ function SettingsCard() {
   });
 
   return (
-    <div className="action-card">
+    <div {...stylex.props(card.base, card.stacked)}>
       {error !== undefined && (
         <p className="error">Failed to load: {errMessage(error)}</p>
       )}
-      <p className="muted help-text">
+      <p {...stylex.props(text.help)}>
         Changes apply live — the scheduler and chat bot reload on each pass, no
         restart. Secrets &amp; bindings (chat, folder, Lark app) stay in the
         Config tab.
       </p>
 
-      <div className="actions-subsystem">schedule</div>
-      <div className="action-fields">
-        <Field.Root className="field">
-          <Field.Label className="field-label">Timezone (IANA)</Field.Label>
+      <div {...stylex.props(s.subsystem)}>schedule</div>
+      <div {...stylex.props(s.fields)}>
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
+            Timezone (IANA)
+          </Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(fieldStyle.input).className}
             placeholder="Asia/Shanghai"
             {...register("timezone")}
           />
@@ -219,12 +264,10 @@ function SettingsCard() {
         />
       </div>
 
-      <div className="actions-subsystem" style={{ marginTop: "1rem" }}>
-        doc table
-      </div>
-      <div className="action-fields">
-        <Field.Root className="field">
-          <Field.Label className="field-label">
+      <div {...stylex.props(s.subsystem, s.subsystemSpaced)}>doc table</div>
+      <div {...stylex.props(s.fields)}>
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
             Doc title
             <br />
             <span
@@ -234,25 +277,40 @@ function SettingsCard() {
               vars: {"{{ date }}"} — used to match the day's doc
             </span>
           </Field.Label>
-          <Field.Control className="field-input" {...register("doc_title")} />
-        </Field.Root>
-        <Field.Root className="field">
-          <Field.Label className="field-label">Header — done</Field.Label>
-          <Field.Control className="field-input" {...register("header_done")} />
-        </Field.Root>
-        <Field.Root className="field">
-          <Field.Label className="field-label">Header — plan</Field.Label>
-          <Field.Control className="field-input" {...register("header_plan")} />
-        </Field.Root>
-        <Field.Root className="field">
-          <Field.Label className="field-label">Header — block</Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(fieldStyle.input).className}
+            {...register("doc_title")}
+          />
+        </Field.Root>
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
+            Header — done
+          </Field.Label>
+          <Field.Control
+            className={stylex.props(fieldStyle.input).className}
+            {...register("header_done")}
+          />
+        </Field.Root>
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
+            Header — plan
+          </Field.Label>
+          <Field.Control
+            className={stylex.props(fieldStyle.input).className}
+            {...register("header_plan")}
+          />
+        </Field.Root>
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
+            Header — block
+          </Field.Label>
+          <Field.Control
+            className={stylex.props(fieldStyle.input).className}
             {...register("header_block")}
           />
         </Field.Root>
-        <Field.Root className="field">
-          <Field.Label className="field-label">
+        <Field.Root className={stylex.props(fieldStyle.row).className}>
+          <Field.Label className={stylex.props(fieldStyle.label).className}>
             Column widths
             <br />
             <span
@@ -263,17 +321,17 @@ function SettingsCard() {
             </span>
           </Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(fieldStyle.input).className}
             placeholder="120, 300, 300, 240"
             {...register("column_widths")}
           />
         </Field.Root>
       </div>
 
-      <div className="actions-subsystem" style={{ marginTop: "1rem" }}>
+      <div {...stylex.props(s.subsystem, s.subsystemSpaced)}>
         templates (minijinja)
       </div>
-      <div className="action-fields">
+      <div {...stylex.props(s.fields)}>
         <TemplateField
           label="Help reply"
           hint="no variables"
@@ -306,12 +364,21 @@ function SettingsCard() {
         />
       </div>
 
-      <div className="filters" style={{ marginTop: "0.75rem" }}>
-        <Button type="button" onClick={onSave} disabled={save.isMutating}>
+      <div {...stylex.props(filters.row, s.filtersSpaced)}>
+        <Button
+          className={stylex.props(button.secondary).className}
+          type="button"
+          onClick={onSave}
+          disabled={save.isMutating}
+        >
           {save.isMutating ? "Saving…" : "Save settings"}
         </Button>
         {feedback && (
-          <span className={`action-result ${feedback.tone}`}>
+          <span
+            {...stylex.props(
+              feedback.tone === "ok" ? text.resultOk : text.resultError,
+            )}
+          >
             {feedback.text}
           </span>
         )}

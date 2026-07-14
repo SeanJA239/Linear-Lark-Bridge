@@ -1,5 +1,7 @@
+import * as stylex from "@stylexjs/stylex";
 import { Link } from "react-router";
 import { LarkBinding } from "../components/LarkBinding";
+import { text } from "../theme/shared";
 
 /// X (Twitter) is preview-only: it has no notification routing, so its only
 /// console-editable setting is which Lark app replies to the link previews.
@@ -7,7 +9,7 @@ export function X() {
   return (
     <section>
       <h2>X</h2>
-      <p className="muted help-text">
+      <p {...stylex.props(text.help)}>
         Link-preview integration. When an X/Twitter URL is shared in Lark, this
         app fetches the tweet and replies with a preview card — so a Lark app
         must be bound for it to answer. There is no notification routing; the

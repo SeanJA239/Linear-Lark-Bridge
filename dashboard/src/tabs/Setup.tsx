@@ -1,5 +1,6 @@
 import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
+import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { RegisterLarkApp } from "../components/RegisterLarkApp";
@@ -8,6 +9,83 @@ import { TAG_CONSOLE_AUTH, TAG_LARK_APPS } from "../lib/cache";
 import { errMessage } from "../lib/errors";
 import { useData, useMutation } from "../lib/tayori";
 import { getConsoleAuth, listLarkApps, putConsoleAuth } from "../sdk";
+import { banner, button, field, filters, text } from "../theme/shared";
+import { colors, fonts, radii } from "../theme/tokens.stylex";
+
+const s = stylex.create({
+  steps: {
+    listStyle: "none",
+    margin: 0,
+    padding: 0,
+    display: "grid",
+    gap: "2.25rem",
+  },
+  stepHead: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.65rem",
+    marginBottom: "0.6rem",
+  },
+  stepNum: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "1.6rem",
+    height: "1.6rem",
+    borderRadius: radii.pill,
+    borderColor: colors.hairlineStrong,
+    borderStyle: "solid",
+    borderWidth: "1px",
+    backgroundColor: colors.surfaceCard,
+    color: colors.ink,
+    fontSize: "0.8rem",
+    fontWeight: 600,
+  },
+  // Step 2's number dims until step 1 (register an app) is done.
+  stepNumMuted: {
+    color: colors.muted,
+  },
+  stepTitle: {
+    fontWeight: 600,
+    color: colors.ink,
+  },
+  done: {
+    color: colors.success,
+    fontSize: "0.8rem",
+  },
+  callback: {
+    display: "inline-block",
+    fontFamily: fonts.mono,
+    fontSize: "0.8rem",
+    padding: "0.4rem 0.65rem",
+    borderColor: colors.hairline,
+    borderStyle: "solid",
+    borderWidth: "1px",
+    borderRadius: radii.sm,
+    backgroundColor: colors.canvas,
+    color: colors.ink,
+    wordBreak: "break-all",
+  },
+  // The action-fields block, with extra room below the callback URL.
+  fields: {
+    display: "grid",
+    gap: "0.45rem",
+    marginTop: "1rem",
+    paddingTop: "0.7rem",
+    borderTopColor: colors.hairlineStrong,
+    borderTopStyle: "dashed",
+    borderTopWidth: "1px",
+  },
+  // The admin-list textarea, merged onto field.input.
+  admins: {
+    minHeight: "3rem",
+    resize: "vertical",
+    fontFamily: fonts.mono,
+  },
+  filtersSpaced: {
+    marginTop: "0.5rem",
+  },
+});
 
 /// Split an admin list pasted as comma / whitespace / newline separated.
 function parseAdmins(raw: string): string[] {
@@ -67,21 +145,21 @@ export function Setup() {
   };
 
   return (
-    <section className="setup">
+    <section>
       <h2>Secure your console</h2>
-      <div className="banner-warn" style={{ marginBottom: "1.5rem" }}>
+      <div {...stylex.props(banner.warn, banner.top)}>
         ⚠ This console is <strong>open</strong> — anyone who can reach it has
         full admin access. Bind a Lark app below to require sign-in.
       </div>
 
-      <ol className="setup-steps">
+      <ol {...stylex.props(s.steps)}>
         <li>
-          <div className="setup-step-head">
-            <span className="setup-step-num">1</span>
-            <span className="setup-step-title">Register a Lark app</span>
-            {hasApp && <span className="setup-done">✓ done</span>}
+          <div {...stylex.props(s.stepHead)}>
+            <span {...stylex.props(s.stepNum)}>1</span>
+            <span {...stylex.props(s.stepTitle)}>Register a Lark app</span>
+            {hasApp && <span {...stylex.props(s.done)}>✓ done</span>}
           </div>
-          <p className="muted help-text">
+          <p {...stylex.props(text.help)}>
             Create a custom app in the{" "}
             <a
               href="https://open.larksuite.com/app"
@@ -94,7 +172,7 @@ export function Setup() {
             Lark.
           </p>
           {hasApp ? (
-            <p className="muted help-text">
+            <p {...stylex.props(text.help)}>
               Registered: {apps.map((a) => a.name).join(", ")}. Add or manage
               more in the <Link to="/lark-apps">Lark Apps</Link> tab.
             </p>
@@ -104,24 +182,29 @@ export function Setup() {
         </li>
 
         <li>
-          <div className="setup-step-head">
-            <span className={`setup-step-num ${hasApp ? "" : "muted"}`}>2</span>
-            <span className="setup-step-title">Bind console sign-in</span>
+          <div {...stylex.props(s.stepHead)}>
+            <span {...stylex.props(s.stepNum, !hasApp && s.stepNumMuted)}>
+              2
+            </span>
+            <span {...stylex.props(s.stepTitle)}>Bind console sign-in</span>
           </div>
-          <p className="muted help-text">
+          <p {...stylex.props(text.help)}>
             In your Lark app's security settings, register this redirect URI and
             grant the user-info permission:
           </p>
-          <code className="setup-callback">{callbackUrl}</code>
+          <code {...stylex.props(s.callback)}>{callbackUrl}</code>
 
-          <div className="action-fields" style={{ marginTop: "1rem" }}>
-            <Field.Root className="field">
-              <Field.Label className="field-label" htmlFor="setup-lark-app">
+          <div {...stylex.props(s.fields)}>
+            <Field.Root className={stylex.props(field.row).className}>
+              <Field.Label
+                className={stylex.props(field.label).className}
+                htmlFor="setup-lark-app"
+              >
                 sign in with
               </Field.Label>
               <Select
                 id="setup-lark-app"
-                className="field-input field-select"
+                trigger={[field.input, field.selectTrigger]}
                 value={larkApp}
                 onValueChange={setLarkApp}
                 disabled={!hasApp}
@@ -132,13 +215,16 @@ export function Setup() {
                 }
               />
             </Field.Root>
-            <Field.Root className="field">
-              <Field.Label className="field-label" htmlFor="setup-admins">
+            <Field.Root className={stylex.props(field.row).className}>
+              <Field.Label
+                className={stylex.props(field.label).className}
+                htmlFor="setup-admins"
+              >
                 admin emails
               </Field.Label>
               <Field.Control
                 id="setup-admins"
-                className="field-input setup-admins"
+                className={stylex.props(field.input, s.admins).className}
                 placeholder="you@example.com, teammate@example.com"
                 value={admins}
                 onChange={(e) => setAdmins(e.target.value)}
@@ -147,29 +233,33 @@ export function Setup() {
               />
             </Field.Root>
           </div>
-          <p className="muted help-text">
+          <p {...stylex.props(text.help)}>
             Only these Lark accounts may sign in. <strong>Leave empty</strong>{" "}
             to allow any user in your tenant.
           </p>
-          <p className="muted help-text">
+          <p {...stylex.props(text.help)}>
             After saving, sign-in is required immediately — make sure you can
             sign in with one of the emails above (or an empty list). If you get
             locked out, clear <code>[console].lark_app</code> in{" "}
             <code>config.toml</code> on the server to reopen it.
           </p>
 
-          <div className="filters" style={{ marginTop: "0.5rem" }}>
+          <div {...stylex.props(filters.row, s.filtersSpaced)}>
             <Button
+              className={stylex.props(button.secondary).className}
               type="button"
               onClick={onSecure}
               disabled={!hasApp || bind.isMutating}
             >
               {bind.isMutating ? "Securing…" : "Secure & sign in"}
             </Button>
-            <Link className="action-btn" to="/status">
+            <Link
+              className={stylex.props(button.action).className}
+              to="/status"
+            >
               Skip for now
             </Link>
-            {error && <span className="action-result error">{error}</span>}
+            {error && <span {...stylex.props(text.resultError)}>{error}</span>}
           </div>
         </li>
       </ol>

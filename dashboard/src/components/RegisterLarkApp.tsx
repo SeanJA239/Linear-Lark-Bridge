@@ -1,11 +1,35 @@
 import { Button } from "@base-ui/react/button";
 import { Field } from "@base-ui/react/field";
+import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { invalidate, TAG_LARK_APPS } from "../lib/cache";
 import { errMessage } from "../lib/errors";
 import { useMutation } from "../lib/tayori";
 import { type LarkAppView, testLarkApp, upsertLarkApp } from "../sdk";
+import { button, card, field, filters, text } from "../theme/shared";
+import { colors, fonts } from "../theme/tokens.stylex";
+
+const s = stylex.create({
+  subsystem: {
+    fontFamily: fonts.mono,
+    fontSize: "0.82rem",
+    color: colors.muted,
+    marginBottom: "0.6rem",
+  },
+  fields: {
+    display: "grid",
+    gap: "0.45rem",
+    marginTop: "0.7rem",
+    paddingTop: "0.7rem",
+    borderTopColor: colors.hairlineStrong,
+    borderTopStyle: "dashed",
+    borderTopWidth: "1px",
+  },
+  buttonRow: {
+    marginTop: "0.75rem",
+  },
+});
 
 interface LarkAppForm {
   name: string;
@@ -116,83 +140,123 @@ export function RegisterLarkApp({ editing, onSaved, onCancelEdit }: Props) {
 
   const busy = save.isMutating || test.isMutating;
 
+  const controlClass = (state: { valid: boolean | null }) =>
+    stylex.props(field.input, state.valid === false && field.inputInvalid)
+      .className ?? "";
+
   return (
-    <div className="action-card">
-      <div className="actions-subsystem">
+    <div {...stylex.props(card.base)}>
+      <div {...stylex.props(s.subsystem)}>
         {editing ? `update "${editing.name}"` : "register a Lark app"}
       </div>
-      <div className="action-fields">
-        <Field.Root className="field" invalid={!!errors.name}>
-          <Field.Label className="field-label">
-            name<span className="req"> *</span>
+      <div {...stylex.props(s.fields)}>
+        <Field.Root
+          className={stylex.props(field.row).className}
+          invalid={!!errors.name}
+        >
+          <Field.Label className={stylex.props(field.label).className}>
+            name<span {...stylex.props(field.required)}> *</span>
           </Field.Label>
           <Field.Control
-            className="field-input"
+            className={(state) =>
+              stylex.props(
+                field.input,
+                state.valid === false && field.inputInvalid,
+                !!editing && field.inputReadonly,
+              ).className ?? ""
+            }
             placeholder="main"
             {...register("name", { required: "name is required" })}
             readOnly={!!editing}
           />
           {errors.name && (
-            <Field.Error className="field-error" match>
+            <Field.Error className={stylex.props(field.error).className} match>
               {errors.name.message}
             </Field.Error>
           )}
         </Field.Root>
-        <Field.Root className="field" invalid={!!errors.app_id}>
-          <Field.Label className="field-label">
-            app_id<span className="req"> *</span>
+        <Field.Root
+          className={stylex.props(field.row).className}
+          invalid={!!errors.app_id}
+        >
+          <Field.Label className={stylex.props(field.label).className}>
+            app_id<span {...stylex.props(field.required)}> *</span>
           </Field.Label>
           <Field.Control
-            className="field-input"
+            className={controlClass}
             placeholder="cli_…"
             {...register("app_id", { required: "app_id is required" })}
           />
           {errors.app_id && (
-            <Field.Error className="field-error" match>
+            <Field.Error className={stylex.props(field.error).className} match>
               {errors.app_id.message}
             </Field.Error>
           )}
         </Field.Root>
-        <Field.Root className="field" invalid={!!errors.app_secret}>
-          <Field.Label className="field-label">
-            app_secret<span className="req"> *</span>
+        <Field.Root
+          className={stylex.props(field.row).className}
+          invalid={!!errors.app_secret}
+        >
+          <Field.Label className={stylex.props(field.label).className}>
+            app_secret<span {...stylex.props(field.required)}> *</span>
           </Field.Label>
           <Field.Control
-            className="field-input"
+            className={controlClass}
             type="password"
             autoComplete="off"
             placeholder="write-only — re-enter to update"
             {...register("app_secret", { required: "app_secret is required" })}
           />
           {errors.app_secret && (
-            <Field.Error className="field-error" match>
+            <Field.Error className={stylex.props(field.error).className} match>
               {errors.app_secret.message}
             </Field.Error>
           )}
         </Field.Root>
-        <Field.Root className="field">
-          <Field.Label className="field-label">base_url</Field.Label>
+        <Field.Root className={stylex.props(field.row).className}>
+          <Field.Label className={stylex.props(field.label).className}>
+            base_url
+          </Field.Label>
           <Field.Control
-            className="field-input"
+            className={stylex.props(field.input).className}
             placeholder={DEFAULT_BASE}
             {...register("base_url")}
           />
         </Field.Root>
       </div>
-      <div className="filters" style={{ marginTop: "0.75rem" }}>
-        <Button type="button" onClick={onTest} disabled={busy}>
+      <div {...stylex.props(filters.row, s.buttonRow)}>
+        <Button
+          className={stylex.props(button.secondary).className}
+          type="button"
+          onClick={onTest}
+          disabled={busy}
+        >
           {test.isMutating ? "Testing…" : "Test"}
         </Button>
-        <Button type="button" onClick={onSave} disabled={busy}>
+        <Button
+          className={stylex.props(button.secondary).className}
+          type="button"
+          onClick={onSave}
+          disabled={busy}
+        >
           {save.isMutating ? "Saving…" : editing ? "Update" : "Save"}
         </Button>
         {editing && onCancelEdit && (
-          <Button type="button" onClick={onCancelEdit} disabled={busy}>
+          <Button
+            className={stylex.props(button.secondary).className}
+            type="button"
+            onClick={onCancelEdit}
+            disabled={busy}
+          >
             Cancel
           </Button>
         )}
         {feedback && (
-          <span className={`action-result ${feedback.tone}`}>
+          <span
+            {...stylex.props(
+              feedback.tone === "ok" ? text.resultOk : text.resultError,
+            )}
+          >
             {feedback.text}
           </span>
         )}
