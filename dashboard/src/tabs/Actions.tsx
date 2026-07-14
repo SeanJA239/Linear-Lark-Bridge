@@ -8,15 +8,14 @@ import { errMessage } from "../lib/errors";
 import { useMutation } from "../lib/tayori";
 import { dispatchAction } from "../sdk";
 import { button, card, field, text } from "../theme/shared";
-import { colors, fonts } from "../theme/tokens.stylex";
+import { colors } from "../theme/tokens.stylex";
+import { typo } from "../theme/typography";
 
 const s = stylex.create({
   group: {
     marginBottom: "1.75rem",
   },
   subsystem: {
-    fontFamily: fonts.mono,
-    fontSize: "0.82rem",
     color: colors.muted,
     marginBottom: "0.6rem",
   },
@@ -30,10 +29,10 @@ const s = stylex.create({
     justifyContent: "space-between",
     gap: "1rem",
   },
+  // Action names are dispatch identifiers — mono, with headline weight.
   name: {
-    fontSize: "0.92rem",
-    fontWeight: 600,
     color: colors.ink,
+    fontWeight: 600,
   },
   fields: {
     display: "grid",
@@ -208,7 +207,7 @@ function ActionCard({
     <div {...stylex.props(card.base)}>
       <div {...stylex.props(s.head)}>
         <div>
-          <code {...stylex.props(s.name)}>{action.name}</code>
+          <code {...stylex.props(typo.mono13, s.name)}>{action.name}</code>
           <div {...stylex.props(text.help)}>{action.description}</div>
         </div>
         <Button
@@ -288,7 +287,7 @@ export function Actions() {
       </p>
       {Object.entries(CATALOG).map(([subsystem, actions]) => (
         <div key={subsystem} {...stylex.props(s.group)}>
-          <div {...stylex.props(s.subsystem)}>{subsystem}</div>
+          <div {...stylex.props(typo.mono13, s.subsystem)}>{subsystem}</div>
           {actions.length === 0 ? (
             <div {...stylex.props(text.help)}>no actions defined yet</div>
           ) : (

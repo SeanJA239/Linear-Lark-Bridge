@@ -28,12 +28,11 @@ import {
   filters,
   text,
 } from "../theme/shared";
-import { colors, fonts } from "../theme/tokens.stylex";
+import { colors } from "../theme/tokens.stylex";
+import { typo } from "../theme/typography";
 
 const s = stylex.create({
   subsystem: {
-    fontFamily: fonts.mono,
-    fontSize: "0.82rem",
     color: colors.muted,
     marginBottom: "0.6rem",
   },
@@ -56,9 +55,13 @@ const s = stylex.create({
   time: {
     width: "auto",
   },
+  // Merged onto field.input (font via typo.mono13).
   template: {
-    fontFamily: "monospace",
     resize: "vertical",
+  },
+  // The "vars: …" line under a template label.
+  hint: {
+    color: colors.muted,
   },
 });
 
@@ -174,12 +177,12 @@ function TemplateField({
       <Field.Label className={stylex.props(fieldStyle.label).className}>
         {label}
         <br />
-        <span className="muted" style={{ fontWeight: 400, fontSize: "0.8em" }}>
-          {hint}
-        </span>
+        <span {...stylex.props(typo.footnote, s.hint)}>{hint}</span>
       </Field.Label>
       <Field.Control
-        className={stylex.props(fieldStyle.input, s.template).className}
+        className={
+          stylex.props(fieldStyle.input, typo.mono13, s.template).className
+        }
         render={<textarea rows={4} />}
         {...field}
       />
@@ -226,7 +229,7 @@ function SettingsCard() {
         Config tab.
       </p>
 
-      <div {...stylex.props(s.subsystem)}>schedule</div>
+      <div {...stylex.props(typo.mono12, s.subsystem)}>schedule</div>
       <div {...stylex.props(s.fields)}>
         <Field.Root className={stylex.props(fieldStyle.row).className}>
           <Field.Label className={stylex.props(fieldStyle.label).className}>
@@ -264,16 +267,15 @@ function SettingsCard() {
         />
       </div>
 
-      <div {...stylex.props(s.subsystem, s.subsystemSpaced)}>doc table</div>
+      <div {...stylex.props(typo.mono12, s.subsystem, s.subsystemSpaced)}>
+        doc table
+      </div>
       <div {...stylex.props(s.fields)}>
         <Field.Root className={stylex.props(fieldStyle.row).className}>
           <Field.Label className={stylex.props(fieldStyle.label).className}>
             Doc title
             <br />
-            <span
-              className="muted"
-              style={{ fontWeight: 400, fontSize: "0.8em" }}
-            >
+            <span {...stylex.props(typo.footnote, s.hint)}>
               vars: {"{{ date }}"} — used to match the day's doc
             </span>
           </Field.Label>
@@ -313,10 +315,7 @@ function SettingsCard() {
           <Field.Label className={stylex.props(fieldStyle.label).className}>
             Column widths
             <br />
-            <span
-              className="muted"
-              style={{ fontWeight: 400, fontSize: "0.8em" }}
-            >
+            <span {...stylex.props(typo.footnote, s.hint)}>
               name, done, plan, block
             </span>
           </Field.Label>
@@ -328,7 +327,7 @@ function SettingsCard() {
         </Field.Root>
       </div>
 
-      <div {...stylex.props(s.subsystem, s.subsystemSpaced)}>
+      <div {...stylex.props(typo.mono12, s.subsystem, s.subsystemSpaced)}>
         templates (minijinja)
       </div>
       <div {...stylex.props(s.fields)}>

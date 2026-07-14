@@ -48,12 +48,21 @@ unavailable); dev serves aggregated CSS through `virtual:stylex:runtime`, import
 conditionally in `main.tsx`.
 
 - `src/theme/tokens.stylex.ts` — the design tokens (`stylex.defineVars`), sourced from
-  `DESIGN.md`. Extend the tokens, never inline hex values in components.
+  `DESIGN.md`. **Every color/effect var carries a light default and a
+  `prefers-color-scheme: dark` override** — components stay scheme-agnostic; never
+  inline hex values or `rgb()` shadow literals (use `effects.*`).
+- `src/theme/typography.ts` — the type ramp (HIG-style desktop scale: title1 22/600,
+  title2 17/600, title3 15/600, headline 13/600, body 13/400, bodyMedium 13/500,
+  callout 12, footnote 11, label 11/500 caps, caption 10/500 caps, mono13/12/11).
+  Apply `typo.*` first in `stylex.props`; local styles never spell ad-hoc
+  fontSize/fontWeight — deliberate overrides (a glyph size, a 600 weight) get a comment.
 - `src/theme/shared.ts` — cross-component styles (cards, form fields, buttons, filters,
   banners, dialogs, mono). Single-component styles live next to that component in a
   local `stylex.create`.
-- `src/theme/global.css` — document base only: reset, `body`, `h1/h2/a/table` element
-  defaults, and the `muted`/`error` text utilities. Nothing component-shaped goes here.
+- `src/theme/global.css` — document base only: reset, `color-scheme: light dark`,
+  `body` (13px base), `h1/h2/a/table` element defaults, and the `muted`/`error` text
+  utilities, each with a dark-scheme media block mirroring the tokens. Nothing
+  component-shaped goes here.
 
 Hard-won rules:
 

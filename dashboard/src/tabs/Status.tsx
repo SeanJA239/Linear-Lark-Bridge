@@ -20,7 +20,8 @@ import {
   setAppEnabled,
 } from "../sdk";
 import { card } from "../theme/shared";
-import { colors, fonts, radii } from "../theme/tokens.stylex";
+import { colors, radii } from "../theme/tokens.stylex";
+import { typo } from "../theme/typography";
 
 const s = stylex.create({
   grid: {
@@ -57,8 +58,6 @@ const s = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     gap: "0.55rem",
-    fontFamily: fonts.mono,
-    fontSize: "0.86rem",
     color: colors.ink,
   },
   // Brand logo (simple-icons) sits flush-left of the app name; inherits ink.
@@ -74,9 +73,6 @@ const s = stylex.create({
     width: "18px",
     height: "18px",
     borderRadius: radii.xs,
-    fontFamily: fonts.sans,
-    fontSize: "0.68rem",
-    fontWeight: 700,
     backgroundColor: colors.surfaceStrong,
     color: colors.muted,
   },
@@ -98,10 +94,6 @@ const s = stylex.create({
   },
   // Status pill — caption-uppercase, semantic-colored, faint tint behind.
   pill: {
-    fontSize: "0.62rem",
-    fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: "0.08em",
     borderColor: "currentColor",
     borderStyle: "solid",
     borderWidth: "1px",
@@ -127,13 +119,11 @@ const s = stylex.create({
   },
   msg: {
     margin: "0.35rem 0",
-    fontSize: "0.82rem",
     color: colors.error,
     wordBreak: "break-word",
   },
   cardFooter: {
     marginTop: "0.55rem",
-    fontSize: "0.75rem",
     color: colors.muted,
   },
   // Toggle track: a flex row so the thumb is vertically centered and the inset
@@ -161,7 +151,7 @@ const s = stylex.create({
     width: "0.9rem",
     height: "0.9rem",
     borderRadius: "50%",
-    backgroundColor: colors.ink,
+    backgroundColor: colors.onPrimary,
     transform: "translateX(0)",
     transitionProperty: "transform",
     transitionDuration: "0.15s",
@@ -214,7 +204,7 @@ function AppLogo({ name }: { name: string }) {
   const Icon = APP_BRANDS[name]?.Icon;
   if (Icon) return <Icon {...stylex.props(s.logo)} size={18} aria-hidden />;
   return (
-    <span {...stylex.props(s.logo, s.logoMono)} aria-hidden>
+    <span {...stylex.props(typo.label, s.logo, s.logoMono)} aria-hidden>
       {appLabel(name).charAt(0).toUpperCase()}
     </span>
   );
@@ -294,12 +284,14 @@ export function Status() {
                   />
                 )}
                 <header {...stylex.props(s.head)}>
-                  <span {...stylex.props(s.name)}>
+                  <span {...stylex.props(typo.mono13, s.name)}>
                     <AppLogo name={app.name} />
                     {appLabel(app.name)}
                   </span>
                   <div {...stylex.props(s.controls)}>
-                    <span {...stylex.props(s.pill, PILL_STATE[state])}>
+                    <span
+                      {...stylex.props(typo.caption, s.pill, PILL_STATE[state])}
+                    >
                       {state}
                     </span>
                     <Switch.Root
@@ -321,8 +313,10 @@ export function Status() {
                     </Switch.Root>
                   </div>
                 </header>
-                {sub?.message && <p {...stylex.props(s.msg)}>{sub.message}</p>}
-                <footer {...stylex.props(s.cardFooter)}>
+                {sub?.message && (
+                  <p {...stylex.props(typo.body, s.msg)}>{sub.message}</p>
+                )}
+                <footer {...stylex.props(typo.callout, s.cardFooter)}>
                   {sub ? `updated ${freshness(sub.updated_at)}` : "not started"}
                 </footer>
               </article>

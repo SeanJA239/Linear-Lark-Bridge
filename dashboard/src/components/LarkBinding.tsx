@@ -7,13 +7,12 @@ import { errMessage } from "../lib/errors";
 import { useData, useMutation } from "../lib/tayori";
 import { listApps, listLarkApps, setAppLarkApp } from "../sdk";
 import { card, field, text } from "../theme/shared";
-import { colors, fonts } from "../theme/tokens.stylex";
+import { colors } from "../theme/tokens.stylex";
+import { typo } from "../theme/typography";
 import { Select } from "./Select";
 
 const s = stylex.create({
   subsystem: {
-    fontFamily: fonts.mono,
-    fontSize: "0.82rem",
     color: colors.muted,
     marginBottom: "0.6rem",
   },
@@ -65,7 +64,7 @@ export function LarkBinding({ appName }: { appName: string }) {
 
   return (
     <div {...stylex.props(card.base, card.binding)}>
-      <div {...stylex.props(s.subsystem)}>Lark app</div>
+      <div {...stylex.props(typo.mono12, s.subsystem)}>Lark app</div>
       <p {...stylex.props(text.help, s.bindingHelp)}>
         The Lark credentials this app delivers with. Manage the registry in the{" "}
         <Link to="/lark-apps">Lark Apps</Link> tab.

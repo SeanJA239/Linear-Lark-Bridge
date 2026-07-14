@@ -3,7 +3,10 @@ import { colors, effects, fonts, radii } from "./tokens.stylex";
 
 // Cross-component StyleX styles. Anything used by a single component belongs
 // next to that component; only genuinely shared pieces (cards, form fields,
-// buttons, banners, dialogs) live here.
+// buttons, banners, dialogs) live here. Font specs follow the type ramp in
+// typography.ts (13px body / 12 callout / 11 footnote — HIG-style desktop
+// scale); controls spell the values directly since form elements don't
+// inherit document fonts.
 
 /** Cards — the surface-card lift above the content window. */
 export const card = stylex.create({
@@ -38,16 +41,18 @@ export const field = stylex.create({
     },
     gap: "0.3rem 0.6rem",
     alignItems: "center",
-    fontSize: "0.82rem",
+    fontSize: "0.8125rem",
     color: colors.ink,
   },
   label: {
-    fontSize: "0.82rem",
+    fontSize: "0.8125rem",
     color: colors.body,
   },
   input: {
-    font: "inherit",
-    fontSize: "0.85rem",
+    fontFamily: fonts.sans,
+    fontSize: "0.8125rem",
+    fontWeight: 400,
+    lineHeight: 1.45,
     padding: "0.4rem 0.6rem",
     borderColor: {
       default: colors.hairlineStrong,
@@ -78,7 +83,7 @@ export const field = stylex.create({
   },
   error: {
     gridColumn: { default: "2", "@media (max-width: 767px)": "1" },
-    fontSize: "0.78rem",
+    fontSize: "0.75rem",
     color: colors.error,
   },
   required: {
@@ -99,9 +104,10 @@ export const field = stylex.create({
 /** Buttons: neutral secondary (filter rows), action dispatch, primary CTA. */
 export const button = stylex.create({
   secondary: {
-    font: "inherit",
-    fontSize: "0.82rem",
+    fontFamily: fonts.sans,
+    fontSize: "0.8125rem",
     fontWeight: 500,
+    lineHeight: 1.45,
     padding: "0.4rem 0.9rem",
     borderColor: { default: colors.hairlineStrong, ":hover": colors.mutedSoft },
     borderStyle: "solid",
@@ -116,9 +122,10 @@ export const button = stylex.create({
   },
   // Action dispatch — neutral secondary; flips to semantic on result.
   action: {
-    font: "inherit",
-    fontSize: "0.84rem",
+    fontFamily: fonts.sans,
+    fontSize: "0.8125rem",
     fontWeight: 500,
+    lineHeight: 1.45,
     padding: "0.38rem 0.95rem",
     borderColor: { default: colors.hairlineStrong, ":hover": colors.mutedSoft },
     borderStyle: "solid",
@@ -145,9 +152,10 @@ export const button = stylex.create({
   },
   // The lavender primary CTA (save/login).
   primary: {
-    font: "inherit",
-    fontSize: "0.85rem",
+    fontFamily: fonts.sans,
+    fontSize: "0.8125rem",
     fontWeight: 500,
+    lineHeight: 1.45,
     padding: "0.5rem 1.2rem",
     borderColor: {
       default: colors.primary,
@@ -178,7 +186,7 @@ export const filters = stylex.create({
     alignItems: "center",
     flexWrap: "wrap",
     gap: "1rem",
-    fontSize: "0.84rem",
+    fontSize: "0.8125rem",
   },
   item: {
     display: "inline-flex",
@@ -192,20 +200,20 @@ export const filters = stylex.create({
 
 export const text = stylex.create({
   help: {
-    fontSize: "0.84rem",
+    fontSize: "0.75rem",
     color: colors.muted,
-    lineHeight: 1.55,
+    lineHeight: 1.5,
     margin: "0.25rem 0 1rem",
   },
   // Result line under an action card.
   resultOk: {
     marginTop: "0.55rem",
-    fontSize: "0.8rem",
+    fontSize: "0.75rem",
     color: colors.success,
   },
   resultError: {
     marginTop: "0.55rem",
-    fontSize: "0.8rem",
+    fontSize: "0.75rem",
     color: colors.error,
     wordBreak: "break-word",
   },
@@ -224,7 +232,7 @@ export const banner = stylex.create({
     borderWidth: "1px",
     backgroundColor: `color-mix(in srgb, ${colors.warning} 10%, transparent)`,
     borderRadius: radii.md,
-    fontSize: "0.86rem",
+    fontSize: "0.8125rem",
     color: colors.ink,
   },
   top: {
@@ -240,7 +248,7 @@ export const dialog = stylex.create({
   backdrop: {
     position: "fixed",
     inset: 0,
-    backgroundColor: "rgb(0 0 0 / 0.55)",
+    backgroundColor: effects.overlay,
     zIndex: 20,
   },
   popup: {
@@ -257,17 +265,19 @@ export const dialog = stylex.create({
     padding: "1.35rem 1.5rem",
     maxWidth: "26rem",
     width: "calc(100vw - 2rem)",
-    boxShadow: `${effects.edgeHighlight}, 0 16px 70px rgb(0 0 0 / 0.6)`,
+    boxShadow: `${effects.edgeHighlight}, ${effects.dialogShadow}`,
     zIndex: 21,
   },
+  // typo.title2.
   title: {
-    fontSize: "1.05rem",
+    fontSize: "1.0625rem",
     fontWeight: 600,
-    letterSpacing: "-0.02em",
+    lineHeight: 1.25,
+    letterSpacing: "-0.01em",
     margin: "0 0 0.5rem",
   },
   desc: {
-    fontSize: "0.85rem",
+    fontSize: "0.8125rem",
     color: colors.body,
     margin: "0 0 1.35rem",
     wordBreak: "break-word",

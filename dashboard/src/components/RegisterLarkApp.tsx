@@ -8,12 +8,11 @@ import { errMessage } from "../lib/errors";
 import { useMutation } from "../lib/tayori";
 import { type LarkAppView, testLarkApp, upsertLarkApp } from "../sdk";
 import { button, card, field, filters, text } from "../theme/shared";
-import { colors, fonts } from "../theme/tokens.stylex";
+import { colors } from "../theme/tokens.stylex";
+import { typo } from "../theme/typography";
 
 const s = stylex.create({
   subsystem: {
-    fontFamily: fonts.mono,
-    fontSize: "0.82rem",
     color: colors.muted,
     marginBottom: "0.6rem",
   },
@@ -146,7 +145,7 @@ export function RegisterLarkApp({ editing, onSaved, onCancelEdit }: Props) {
 
   return (
     <div {...stylex.props(card.base)}>
-      <div {...stylex.props(s.subsystem)}>
+      <div {...stylex.props(typo.mono12, s.subsystem)}>
         {editing ? `update "${editing.name}"` : "register a Lark app"}
       </div>
       <div {...stylex.props(s.fields)}>

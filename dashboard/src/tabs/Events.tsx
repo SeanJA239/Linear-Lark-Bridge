@@ -4,7 +4,8 @@ import { useMemo } from "react";
 import { Select } from "../components/Select";
 import { type Level, useEvents } from "../lib/useEvents";
 import { filters } from "../theme/shared";
-import { colors, fonts, radii } from "../theme/tokens.stylex";
+import { colors, radii } from "../theme/tokens.stylex";
+import { typo } from "../theme/typography";
 
 const s = stylex.create({
   header: {
@@ -35,8 +36,6 @@ const s = stylex.create({
     listStyle: "none",
     padding: 0,
     margin: "0.85rem 0 0",
-    fontFamily: fonts.mono,
-    fontSize: "0.78rem",
     maxHeight: "60vh",
     overflowY: "auto",
     borderColor: colors.hairline,
@@ -83,7 +82,6 @@ const s = stylex.create({
     color: colors.ink,
   },
   fields: {
-    fontSize: "0.74rem",
     color: colors.muted,
     overflowWrap: "anywhere",
   },
@@ -178,7 +176,7 @@ export function Events() {
           )}
         </div>
       </header>
-      <ul {...stylex.props(s.log)}>
+      <ul {...stylex.props(typo.mono12, s.log)}>
         {filtered.length === 0 && (
           <li {...stylex.props(s.row, s.rowEmpty)}>no events yet</li>
         )}
@@ -195,7 +193,7 @@ export function Events() {
             )}
             <span {...stylex.props(s.msg)}>{e.message}</span>
             {Object.keys(e.fields).length > 0 && (
-              <span {...stylex.props(s.fields)}>
+              <span {...stylex.props(typo.mono11, s.fields)}>
                 {Object.entries(e.fields)
                   .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
                   .join(" ")}

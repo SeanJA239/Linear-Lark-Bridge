@@ -12,7 +12,7 @@ import { Link, Outlet, useLocation } from "react-router";
 import { revalidateMe, useMe } from "../lib/auth";
 import { useMutation } from "../lib/tayori";
 import { logout } from "../sdk";
-import { colors, effects, radii } from "../theme/tokens.stylex";
+import { colors, effects, fonts, radii } from "../theme/tokens.stylex";
 import { OpenConsoleBanner } from "./OpenConsoleBanner";
 
 const MOBILE = "@media (max-width: 767px)";
@@ -40,7 +40,7 @@ const s = stylex.create({
     alignItems: "center",
     gap: "0.6rem",
     padding: "0 0.6rem",
-    fontSize: "0.9rem",
+    fontSize: "0.8125rem",
     fontWeight: 600,
     letterSpacing: "-0.02em",
     color: colors.ink,
@@ -71,10 +71,8 @@ const s = stylex.create({
     alignItems: "center",
     gap: "0.55rem",
     flex: { [MOBILE]: "none" },
-    font: "inherit",
-    fontSize: "0.84rem",
+    fontSize: "0.8125rem",
     fontWeight: 500,
-    letterSpacing: "-0.01em",
     padding: "0.4rem 0.6rem",
     borderStyle: "none",
     borderRadius: radii.sm,
@@ -110,7 +108,7 @@ const s = stylex.create({
   },
   userChip: {
     display: { default: null, [MOBILE]: "none" },
-    fontSize: "0.78rem",
+    fontSize: "0.75rem",
     color: colors.muted,
     minWidth: 0,
     overflow: "hidden",
@@ -118,8 +116,8 @@ const s = stylex.create({
     whiteSpace: "nowrap",
   },
   signout: {
-    font: "inherit",
-    fontSize: "0.72rem",
+    fontFamily: fonts.sans,
+    fontSize: "0.6875rem",
     flex: "none",
     padding: "0.28rem 0.6rem",
     borderColor: { default: colors.hairlineStrong, ":hover": colors.mutedSoft },

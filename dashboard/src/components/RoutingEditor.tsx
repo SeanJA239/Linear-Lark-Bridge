@@ -23,6 +23,7 @@ import {
 import { useData, useMutation } from "../lib/tayori";
 import { banner, button, card, mono } from "../theme/shared";
 import { colors, effects, fonts, radii } from "../theme/tokens.stylex";
+import { typo } from "../theme/typography";
 import { Select } from "./Select";
 import { Spinner } from "./Spinner";
 
@@ -33,8 +34,6 @@ const s = stylex.create({
     padding: "1.4rem 1.45rem 1.2rem",
   },
   lead: {
-    fontSize: "0.84rem",
-    lineHeight: 1.55,
     color: colors.muted,
     margin: "0 0 1.4rem",
     maxWidth: "64ch",
@@ -59,25 +58,18 @@ const s = stylex.create({
     borderBottomColor: colors.hairline,
   },
   sectionTitle: {
-    fontSize: "0.95rem",
-    fontWeight: 600,
-    letterSpacing: "-0.01em",
     color: colors.ink,
   },
   sectionHint: {
-    fontSize: "0.76rem",
     color: colors.muted,
   },
   // Per-app subject explanation (spec.subject.help), tucked under the head rule.
   sectionHelp: {
-    fontSize: "0.78rem",
-    lineHeight: 1.5,
     color: colors.muted,
     margin: "-0.6rem 0 1.1rem",
     maxWidth: "64ch",
   },
   empty: {
-    fontSize: "0.82rem",
     color: colors.mutedSoft,
     margin: "0 0 0.8rem",
   },
@@ -103,18 +95,13 @@ const s = stylex.create({
     borderBottomStyle: "solid",
     borderBottomColor: colors.hairlineSoft,
   },
+  // typo.label supplies the caps/size/tracking; only the mono face is local.
   ruleBadge: {
     fontFamily: fonts.mono,
-    fontSize: "0.68rem",
-    fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: "0.08em",
     color: colors.mutedSoft,
   },
   // Remove-rule — quiet text button, reddens on hover.
   removeRule: {
-    font: "inherit",
-    fontSize: "0.76rem",
     padding: "0.32rem 0.6rem",
     borderColor: "transparent",
     borderStyle: "solid",
@@ -139,23 +126,15 @@ const s = stylex.create({
     display: "flex",
     alignItems: "baseline",
     gap: "0.5rem",
-    fontSize: "0.7rem",
-    fontWeight: 500,
-    textTransform: "uppercase",
-    letterSpacing: "0.07em",
     color: colors.muted,
   },
+  // Sits inline inside the caps label — undo the inherited uppercase.
   fieldHint: {
-    fontSize: "0.72rem",
-    fontWeight: 400,
     textTransform: "none",
-    letterSpacing: 0,
     color: colors.mutedSoft,
   },
   // Inputs — recessed surface, hairline, lavender focus ring.
   input: {
-    font: "inherit",
-    fontSize: "0.85rem",
     padding: "0.46rem 0.65rem",
     borderColor: {
       default: colors.hairlineStrong,
@@ -191,9 +170,6 @@ const s = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     gap: "0.3rem",
-    font: "inherit",
-    fontSize: "0.8rem",
-    lineHeight: 1,
     padding: "0.38rem 0.72rem",
     borderColor: { default: colors.hairlineStrong, ":hover": colors.mutedSoft },
     borderStyle: "solid",
@@ -213,7 +189,7 @@ const s = stylex.create({
   },
   chipCheck: {
     display: "inline-flex",
-    fontSize: "0.68rem",
+    fontSize: "0.6875rem",
     marginLeft: "-0.1rem",
   },
   // Destination / mapping rows — aligned flex: kind, target (grows), remove.
@@ -222,10 +198,6 @@ const s = stylex.create({
   },
   destLabel: {
     display: "block",
-    fontSize: "0.7rem",
-    fontWeight: 500,
-    textTransform: "uppercase",
-    letterSpacing: "0.07em",
     color: colors.muted,
     marginBottom: "0.5rem",
   },
@@ -243,12 +215,11 @@ const s = stylex.create({
   arrow: {
     flex: "none",
     color: colors.mutedSoft,
-    fontSize: "0.9rem",
+    fontSize: "0.875rem",
   },
   // Kind select — looks like a routing input with a chevron (base pill styling
   // comes from Select; this ports only the overrides).
   kindSelect: {
-    fontSize: "0.85rem",
     flex: "none",
     minWidth: "9rem",
     padding: "0.46rem 0.65rem",
@@ -264,7 +235,7 @@ const s = stylex.create({
     justifyContent: "center",
     width: "1.95rem",
     height: "1.95rem",
-    fontSize: "1.15rem",
+    fontSize: "1.125rem",
     lineHeight: 1,
     borderColor: "transparent",
     borderStyle: "solid",
@@ -284,8 +255,6 @@ const s = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     gap: "0.4rem",
-    font: "inherit",
-    fontSize: "0.82rem",
     padding: "0.44rem 0.85rem",
     borderColor: { default: colors.hairlineStrong, ":hover": colors.mutedSoft },
     borderStyle: { default: "dashed", ":hover": "solid" },
@@ -297,8 +266,9 @@ const s = stylex.create({
     transitionProperty: "border-color, background-color, color",
     transitionDuration: "0.15s",
   },
+  // typo.callout base with the interactive-label weight kept.
   addSubtle: {
-    fontSize: "0.78rem",
+    fontWeight: 500,
     padding: "0.34rem 0.7rem",
     marginTop: "0.1rem",
   },
@@ -317,9 +287,6 @@ const s = stylex.create({
     borderTopWidth: "1px",
     borderTopStyle: "solid",
     borderTopColor: colors.hairline,
-  },
-  feedback: {
-    fontSize: "0.82rem",
   },
   feedbackOk: {
     color: colors.success,
@@ -357,7 +324,7 @@ const s = stylex.create({
     transitionDuration: "0.15s",
   },
   selectIcon: {
-    fontSize: "0.7rem",
+    fontSize: "0.6875rem",
     color: colors.muted,
   },
   comboPopup: {
@@ -368,7 +335,7 @@ const s = stylex.create({
     borderWidth: "1px",
     borderRadius: radii.md,
     padding: "0.3rem",
-    boxShadow: "0 8px 28px rgb(0 0 0 / 0.5)",
+    boxShadow: effects.popShadow,
     zIndex: 10,
     width: "var(--anchor-width)",
     minWidth: "15rem",
@@ -377,7 +344,6 @@ const s = stylex.create({
   },
   comboEmpty: {
     padding: "0.5rem",
-    fontSize: "0.8rem",
     color: colors.muted,
   },
   comboItem: {
@@ -386,7 +352,6 @@ const s = stylex.create({
     gap: "0.4rem",
     padding: "0.4rem 0.55rem 0.4rem 0.35rem",
     borderRadius: radii.sm,
-    fontSize: "0.85rem",
     cursor: "pointer",
     userSelect: "none",
     outline: "none",
@@ -405,11 +370,10 @@ const s = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: "0.05rem",
+    // Deliberate sub-ramp leading: keeps the stacked name + id pair compact.
     lineHeight: 1.2,
   },
   comboItemId: {
-    fontSize: "0.68rem",
-    fontFamily: fonts.mono,
     color: colors.mutedSoft,
   },
 });
@@ -582,7 +546,7 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
 
   return (
     <div {...stylex.props(card.base, card.stacked, s.editor)}>
-      <p {...stylex.props(s.lead)}>
+      <p {...stylex.props(typo.body, s.lead)}>
         Route events to Lark group chats or DMs — pick from the bot's chats and
         users, or type a <code {...stylex.props(mono.inlineCode)}>chat_id</code>{" "}
         / email. Changes apply live, no restart. Delivery needs a bound{" "}
@@ -602,18 +566,22 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
       {/* ── Rules ── */}
       <section>
         <div {...stylex.props(s.sectionHead)}>
-          <span {...stylex.props(s.sectionTitle)}>Routing rules</span>
-          <span {...stylex.props(s.sectionHint)}>
+          <span {...stylex.props(typo.title3, s.sectionTitle)}>
+            Routing rules
+          </span>
+          <span {...stylex.props(typo.callout, s.sectionHint)}>
             every matching rule contributes its destinations
           </span>
         </div>
 
         {spec.subject.help && (
-          <p {...stylex.props(s.sectionHelp)}>{spec.subject.help}</p>
+          <p {...stylex.props(typo.callout, s.sectionHelp)}>
+            {spec.subject.help}
+          </p>
         )}
 
         {edit.rules.length === 0 && (
-          <p {...stylex.props(s.empty)}>
+          <p {...stylex.props(typo.body, s.empty)}>
             No rules yet — unmatched events fall through to the defaults below.
           </p>
         )}
@@ -621,10 +589,12 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
         {edit.rules.map((rule, i) => (
           <div key={rule.key} {...stylex.props(s.rule)}>
             <div {...stylex.props(s.ruleHead)}>
-              <span {...stylex.props(s.ruleBadge)}>Rule {i + 1}</span>
+              <span {...stylex.props(typo.label, s.ruleBadge)}>
+                Rule {i + 1}
+              </span>
               <Button
                 type="button"
-                className={stylex.props(s.removeRule).className}
+                className={stylex.props(typo.callout, s.removeRule).className}
                 onClick={() => removeRule(rule.key)}
               >
                 Remove
@@ -633,17 +603,17 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
 
             <div {...stylex.props(s.field)}>
               <label
-                {...stylex.props(s.fieldLabel)}
+                {...stylex.props(typo.label, s.fieldLabel)}
                 htmlFor={`match-${rule.key}`}
               >
                 {spec.subject.label}
-                <span {...stylex.props(s.fieldHint)}>
+                <span {...stylex.props(typo.footnote, s.fieldHint)}>
                   exact, “{spec.subject.placeholder}/*”, or “*” for all
                 </span>
               </label>
               <Input
                 id={`match-${rule.key}`}
-                className={stylex.props(s.input).className}
+                className={stylex.props(typo.body, s.input).className}
                 placeholder={spec.subject.placeholder}
                 value={rule.match}
                 onChange={(e) =>
@@ -658,9 +628,11 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
             </div>
 
             <div {...stylex.props(s.field)}>
-              <span {...stylex.props(s.fieldLabel)}>
+              <span {...stylex.props(typo.label, s.fieldLabel)}>
                 Events
-                <span {...stylex.props(s.fieldHint)}>none selected = all</span>
+                <span {...stylex.props(typo.footnote, s.fieldHint)}>
+                  none selected = all
+                </span>
               </span>
               <ToggleGroup
                 className={stylex.props(s.chips).className}
@@ -677,8 +649,11 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
                     key={opt.value}
                     value={opt.value}
                     className={(state) =>
-                      stylex.props(s.chip, state.pressed && s.chipPressed)
-                        .className ?? ""
+                      stylex.props(
+                        typo.bodyMedium,
+                        s.chip,
+                        state.pressed && s.chipPressed,
+                      ).className ?? ""
                     }
                     aria-label={opt.label}
                     title={opt.description}
@@ -717,7 +692,7 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
 
         <Button
           type="button"
-          className={stylex.props(s.add).className}
+          className={stylex.props(typo.bodyMedium, s.add).className}
           onClick={addRule}
         >
           <span {...stylex.props(s.addIcon)}>+</span> Add rule
@@ -727,8 +702,10 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
       {/* ── Default destinations ── */}
       <section {...stylex.props(s.sectionSpaced)}>
         <div {...stylex.props(s.sectionHead)}>
-          <span {...stylex.props(s.sectionTitle)}>Default destinations</span>
-          <span {...stylex.props(s.sectionHint)}>
+          <span {...stylex.props(typo.title3, s.sectionTitle)}>
+            Default destinations
+          </span>
+          <span {...stylex.props(typo.callout, s.sectionHint)}>
             used when no rule matches — empty drops the event
           </span>
         </div>
@@ -760,15 +737,19 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
       {spec.features.user_map && (
         <section {...stylex.props(s.sectionSpaced)}>
           <div {...stylex.props(s.sectionHead)}>
-            <span {...stylex.props(s.sectionTitle)}>Reviewer user map</span>
-            <span {...stylex.props(s.sectionHint)}>
+            <span {...stylex.props(typo.title3, s.sectionTitle)}>
+              Reviewer user map
+            </span>
+            <span {...stylex.props(typo.callout, s.sectionHint)}>
               source username → Lark email
             </span>
           </div>
           {edit.user_map.map((m) => (
             <div key={m.key} {...stylex.props(s.dest)}>
               <Input
-                className={stylex.props(s.input, s.destGrow).className}
+                className={
+                  stylex.props(typo.body, s.input, s.destGrow).className
+                }
                 placeholder="username"
                 value={m.username}
                 onChange={(e) =>
@@ -782,7 +763,9 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
               />
               <span {...stylex.props(s.arrow)}>→</span>
               <Input
-                className={stylex.props(s.input, s.destGrow).className}
+                className={
+                  stylex.props(typo.body, s.input, s.destGrow).className
+                }
                 placeholder="lark@email"
                 value={m.lark_email}
                 onChange={(e) =>
@@ -815,7 +798,7 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
           ))}
           <Button
             type="button"
-            className={stylex.props(s.add, s.addSubtle).className}
+            className={stylex.props(typo.callout, s.add, s.addSubtle).className}
             onClick={() =>
               setEdit((s) =>
                 s
@@ -839,13 +822,15 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
       {spec.features.alert_labels && (
         <section {...stylex.props(s.sectionSpaced)}>
           <div {...stylex.props(s.sectionHead)}>
-            <span {...stylex.props(s.sectionTitle)}>Alert labels</span>
-            <span {...stylex.props(s.sectionHint)}>
+            <span {...stylex.props(typo.title3, s.sectionTitle)}>
+              Alert labels
+            </span>
+            <span {...stylex.props(typo.callout, s.sectionHint)}>
               comma-separated; these labels trigger an alert card
             </span>
           </div>
           <Input
-            className={stylex.props(s.input, s.fullWidth).className}
+            className={stylex.props(typo.body, s.input, s.fullWidth).className}
             placeholder="bug, urgent, p0"
             value={edit.alert_labels}
             onChange={(e) =>
@@ -867,16 +852,16 @@ export function RoutingEditor({ appName }: RoutingEditorProps) {
         {/* A save error always wins; otherwise show the dirty hint, else the
             last "saved" confirmation. */}
         {feedback?.tone === "error" ? (
-          <span {...stylex.props(s.feedback, s.feedbackError)}>
+          <span {...stylex.props(typo.callout, s.feedbackError)}>
             {feedback.text}
           </span>
         ) : dirty ? (
-          <span {...stylex.props(s.feedback, s.feedbackDirty)}>
+          <span {...stylex.props(typo.callout, s.feedbackDirty)}>
             unsaved changes
           </span>
         ) : (
           feedback?.tone === "ok" && (
-            <span {...stylex.props(s.feedback, s.feedbackOk)}>
+            <span {...stylex.props(typo.callout, s.feedbackOk)}>
               {feedback.text}
             </span>
           )
@@ -951,7 +936,7 @@ function DestinationList({
       ))}
       <Button
         type="button"
-        className={stylex.props(s.add, s.addSubtle).className}
+        className={stylex.props(typo.callout, s.add, s.addSubtle).className}
         onClick={onAdd}
       >
         <span {...stylex.props(s.addIcon)}>+</span> Add destination
@@ -993,7 +978,7 @@ function PickerField({
   if (!items || items.length === 0) {
     return (
       <Input
-        className={stylex.props(s.input, s.destGrow).className}
+        className={stylex.props(typo.body, s.input, s.destGrow).className}
         placeholder={manualPlaceholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -1021,7 +1006,7 @@ function PickerField({
     >
       <span {...stylex.props(s.comboControl, s.destGrow)}>
         <Combobox.Input
-          className={stylex.props(s.input, s.comboInput).className}
+          className={stylex.props(typo.body, s.input, s.comboInput).className}
           placeholder={searchPlaceholder}
         />
         <Combobox.Trigger
@@ -1036,7 +1021,9 @@ function PickerField({
       <Combobox.Portal>
         <Combobox.Positioner sideOffset={4} align="start">
           <Combobox.Popup className={stylex.props(s.comboPopup).className}>
-            <Combobox.Empty className={stylex.props(s.comboEmpty).className}>
+            <Combobox.Empty
+              className={stylex.props(typo.callout, s.comboEmpty).className}
+            >
               {emptyLabel}
             </Combobox.Empty>
             <Combobox.List>
@@ -1046,6 +1033,7 @@ function PickerField({
                   value={id}
                   className={(state) =>
                     stylex.props(
+                      typo.body,
                       s.comboItem,
                       state.highlighted && s.comboItemHighlighted,
                     ).className ?? ""
@@ -1058,7 +1046,9 @@ function PickerField({
                   </Combobox.ItemIndicator>
                   <span {...stylex.props(s.comboItemText)}>
                     <span>{byId.get(id) ?? id}</span>
-                    <span {...stylex.props(s.comboItemId)}>{id}</span>
+                    <span {...stylex.props(typo.mono11, s.comboItemId)}>
+                      {id}
+                    </span>
                   </span>
                 </Combobox.Item>
               )}

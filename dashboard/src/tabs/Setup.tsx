@@ -10,7 +10,8 @@ import { errMessage } from "../lib/errors";
 import { useData, useMutation } from "../lib/tayori";
 import { getConsoleAuth, listLarkApps, putConsoleAuth } from "../sdk";
 import { banner, button, field, filters, text } from "../theme/shared";
-import { colors, fonts, radii } from "../theme/tokens.stylex";
+import { colors, radii } from "../theme/tokens.stylex";
+import { typo } from "../theme/typography";
 
 const s = stylex.create({
   steps: {
@@ -38,7 +39,8 @@ const s = stylex.create({
     borderWidth: "1px",
     backgroundColor: colors.surfaceCard,
     color: colors.ink,
-    fontSize: "0.8rem",
+    // typo.callout supplies the 12px badge digit; the weight bumps to 600
+    // locally so the number holds its own inside the pill.
     fontWeight: 600,
   },
   // Step 2's number dims until step 1 (register an app) is done.
@@ -46,17 +48,13 @@ const s = stylex.create({
     color: colors.muted,
   },
   stepTitle: {
-    fontWeight: 600,
     color: colors.ink,
   },
   done: {
     color: colors.success,
-    fontSize: "0.8rem",
   },
   callback: {
     display: "inline-block",
-    fontFamily: fonts.mono,
-    fontSize: "0.8rem",
     padding: "0.4rem 0.65rem",
     borderColor: colors.hairline,
     borderStyle: "solid",
@@ -76,11 +74,10 @@ const s = stylex.create({
     borderTopStyle: "dashed",
     borderTopWidth: "1px",
   },
-  // The admin-list textarea, merged onto field.input.
+  // The admin-list textarea, merged onto field.input (font via typo.mono13).
   admins: {
     minHeight: "3rem",
     resize: "vertical",
-    fontFamily: fonts.mono,
   },
   filtersSpaced: {
     marginTop: "0.5rem",
@@ -155,9 +152,13 @@ export function Setup() {
       <ol {...stylex.props(s.steps)}>
         <li>
           <div {...stylex.props(s.stepHead)}>
-            <span {...stylex.props(s.stepNum)}>1</span>
-            <span {...stylex.props(s.stepTitle)}>Register a Lark app</span>
-            {hasApp && <span {...stylex.props(s.done)}>✓ done</span>}
+            <span {...stylex.props(typo.callout, s.stepNum)}>1</span>
+            <span {...stylex.props(typo.title3, s.stepTitle)}>
+              Register a Lark app
+            </span>
+            {hasApp && (
+              <span {...stylex.props(typo.callout, s.done)}>✓ done</span>
+            )}
           </div>
           <p {...stylex.props(text.help)}>
             Create a custom app in the{" "}
@@ -183,16 +184,24 @@ export function Setup() {
 
         <li>
           <div {...stylex.props(s.stepHead)}>
-            <span {...stylex.props(s.stepNum, !hasApp && s.stepNumMuted)}>
+            <span
+              {...stylex.props(
+                typo.callout,
+                s.stepNum,
+                !hasApp && s.stepNumMuted,
+              )}
+            >
               2
             </span>
-            <span {...stylex.props(s.stepTitle)}>Bind console sign-in</span>
+            <span {...stylex.props(typo.title3, s.stepTitle)}>
+              Bind console sign-in
+            </span>
           </div>
           <p {...stylex.props(text.help)}>
             In your Lark app's security settings, register this redirect URI and
             grant the user-info permission:
           </p>
-          <code {...stylex.props(s.callback)}>{callbackUrl}</code>
+          <code {...stylex.props(typo.mono13, s.callback)}>{callbackUrl}</code>
 
           <div {...stylex.props(s.fields)}>
             <Field.Root className={stylex.props(field.row).className}>
@@ -224,7 +233,9 @@ export function Setup() {
               </Field.Label>
               <Field.Control
                 id="setup-admins"
-                className={stylex.props(field.input, s.admins).className}
+                className={
+                  stylex.props(field.input, typo.mono13, s.admins).className
+                }
                 placeholder="you@example.com, teammate@example.com"
                 value={admins}
                 onChange={(e) => setAdmins(e.target.value)}

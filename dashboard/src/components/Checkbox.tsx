@@ -29,7 +29,7 @@ const s = stylex.create({
   },
   indicator: {
     display: "inline-flex",
-    fontSize: "0.7rem",
+    fontSize: "0.6875rem",
     lineHeight: 1,
     color: colors.onPrimary,
   },

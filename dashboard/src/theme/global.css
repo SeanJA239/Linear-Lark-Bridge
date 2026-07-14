@@ -1,6 +1,8 @@
 /* Document-level base for the console. Component styling lives in StyleX
-   (tokens in src/theme/tokens.stylex.ts); only the reset, element defaults,
-   and the two text utilities belong here. Literal colors mirror the tokens. */
+   (tokens in src/theme/tokens.stylex.ts, type ramp in src/theme/typography.ts);
+   only the reset, element defaults, and the two text utilities belong here.
+   Literal colors mirror the tokens: light values first, dark overrides in the
+   media block below. */
 
 *,
 *::before,
@@ -9,19 +11,19 @@
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
 }
 
 body {
   margin: 0;
-  background: #010102; /* colors.canvas */
-  color: #d0d6e0; /* colors.body */
+  background: #f4f4f5; /* colors.canvas */
+  color: #45454d; /* colors.body */
   font-family:
     "Inter", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Helvetica,
     Arial, sans-serif;
-  font-size: 15px;
+  /* typo.body — 13px, the HIG-style desktop base. */
+  font-size: 0.8125rem;
   line-height: 1.5;
-  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   font-synthesis-weight: none;
@@ -29,22 +31,24 @@ body {
   position: relative;
 }
 
+/* typo.title1 — page titles. */
 h1 {
-  font-size: 1.6rem;
-  font-weight: 600; /* Linear display weight — never 700+ */
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  color: #f7f8f8; /* colors.ink */
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #26262b; /* colors.ink */
   margin: 0 0 1.5rem;
 }
 
-/* Section labels: the caption-uppercase token. */
+/* typo.label — section eyebrows. */
 h2 {
-  font-size: 0.7rem;
+  font-size: 0.6875rem;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: #8a8f98; /* colors.muted */
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  color: #6f6e77; /* colors.muted */
   margin: 0 0 0.85rem;
 }
 
@@ -52,10 +56,9 @@ section + section {
   margin-top: 2.5rem;
 }
 
-/* Link emphasis — one of the four sanctioned uses of the accent. The lighter
-   hover tint carries better than the raw primary on dark surfaces. */
+/* Link emphasis — one of the four sanctioned uses of the accent. */
 a {
-  color: #828fff; /* colors.primaryHover */
+  color: #4f5ac8; /* colors.primaryHover */
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
@@ -63,29 +66,70 @@ a {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
-  color: #f7f8f8; /* colors.ink */
+  font-size: 0.8125rem; /* typo.body */
+  color: #26262b; /* colors.ink */
 }
 
 th,
 td {
   text-align: left;
   padding: 0.6rem 0.8rem;
-  border-bottom: 1px solid #23252a; /* colors.hairline */
+  border-bottom: 1px solid #e6e5e8; /* colors.hairline */
 }
 
+/* typo.label. */
 th {
   font-weight: 500;
-  font-size: 0.68rem;
+  font-size: 0.6875rem;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: #8a8f98; /* colors.muted */
+  letter-spacing: 0.06em;
+  color: #6f6e77; /* colors.muted */
 }
 
 .muted {
-  color: #8a8f98; /* colors.muted */
+  color: #6f6e77; /* colors.muted */
 }
 
 .error {
-  color: #eb5e56; /* colors.error */
+  color: #d13d38; /* colors.error */
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #010102; /* colors.canvas */
+    color: #d0d6e0; /* colors.body */
+  }
+
+  h1 {
+    color: #f7f8f8; /* colors.ink */
+  }
+
+  h2 {
+    color: #8a8f98; /* colors.muted */
+  }
+
+  a {
+    color: #828fff; /* colors.primaryHover */
+  }
+
+  table {
+    color: #f7f8f8; /* colors.ink */
+  }
+
+  th,
+  td {
+    border-bottom-color: #23252a; /* colors.hairline */
+  }
+
+  th {
+    color: #8a8f98; /* colors.muted */
+  }
+
+  .muted {
+    color: #8a8f98; /* colors.muted */
+  }
+
+  .error {
+    color: #eb5e56; /* colors.error */
+  }
 }

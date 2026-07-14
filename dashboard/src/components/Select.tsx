@@ -1,12 +1,12 @@
 import { Select as BaseSelect } from "@base-ui/react/select";
 import * as stylex from "@stylexjs/stylex";
 import type { ReactNode } from "react";
-import { colors, radii } from "../theme/tokens.stylex";
+import { colors, effects, fonts, radii } from "../theme/tokens.stylex";
 
 const s = stylex.create({
   trigger: {
-    font: "inherit",
-    fontSize: "0.85rem",
+    fontFamily: fonts.sans,
+    fontSize: "0.8125rem",
     padding: "0.28rem 0.55rem",
     borderColor: { default: colors.hairlineStrong, ":hover": colors.mutedSoft },
     borderStyle: "solid",
@@ -27,7 +27,7 @@ const s = stylex.create({
     borderColor: colors.mutedSoft,
   },
   icon: {
-    fontSize: "0.7rem",
+    fontSize: "0.6875rem",
     color: colors.muted,
   },
   popup: {
@@ -38,7 +38,7 @@ const s = stylex.create({
     borderWidth: "1px",
     borderRadius: radii.md,
     padding: "0.25rem",
-    boxShadow: "0 8px 28px rgb(0 0 0 / 0.5)",
+    boxShadow: effects.popShadow,
     minWidth: "7rem",
     zIndex: 10,
   },
@@ -48,7 +48,7 @@ const s = stylex.create({
     gap: "0.4rem",
     padding: "0.3rem 0.55rem 0.3rem 0.35rem",
     borderRadius: radii.sm,
-    fontSize: "0.85rem",
+    fontSize: "0.8125rem",
     cursor: "pointer",
     userSelect: "none",
     outline: "none",

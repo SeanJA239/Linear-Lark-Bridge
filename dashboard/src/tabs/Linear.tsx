@@ -32,12 +32,11 @@ import {
   filters,
   text,
 } from "../theme/shared";
-import { colors, fonts } from "../theme/tokens.stylex";
+import { colors } from "../theme/tokens.stylex";
+import { typo } from "../theme/typography";
 
 const s = stylex.create({
   subsystem: {
-    fontFamily: fonts.mono,
-    fontSize: "0.82rem",
     color: colors.muted,
     marginBottom: "0.6rem",
   },
@@ -169,7 +168,7 @@ function SettingsCard() {
 
   return (
     <div {...stylex.props(card.base, card.stacked)}>
-      <div {...stylex.props(s.subsystem)}>behavior settings</div>
+      <div {...stylex.props(typo.mono12, s.subsystem)}>behavior settings</div>
       {error !== undefined && (
         <p className="error">Failed to load: {errMessage(error)}</p>
       )}
@@ -364,7 +363,9 @@ function UserMapCard() {
 
   return (
     <div {...stylex.props(card.base, s.userMapCard)}>
-      <div {...stylex.props(s.subsystem)}>user map (Linear → Lark email)</div>
+      <div {...stylex.props(typo.mono12, s.subsystem)}>
+        user map (Linear → Lark email)
+      </div>
       <p {...stylex.props(text.help)}>
         Override the DM target when a person's Linear and Lark emails differ.
         When they match, no entry is needed.

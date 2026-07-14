@@ -8,7 +8,8 @@ import { errMessage } from "../lib/errors";
 import { useData, useMutation } from "../lib/tayori";
 import { getConfig, putConfig } from "../sdk";
 import { button, filters } from "../theme/shared";
-import { colors, effects, fonts, radii } from "../theme/tokens.stylex";
+import { colors, effects, radii } from "../theme/tokens.stylex";
+import { typo } from "../theme/typography";
 
 const s = stylex.create({
   header: {
@@ -28,9 +29,6 @@ const s = stylex.create({
   editor: {
     width: "100%",
     minHeight: "22rem",
-    fontFamily: fonts.mono,
-    fontSize: "0.82rem",
-    lineHeight: 1.6,
     padding: "1rem 1.1rem",
     borderColor: {
       default: colors.hairline,
@@ -119,7 +117,7 @@ export function Config() {
       )}
       <Field.Root>
         <Field.Control
-          className={stylex.props(s.editor).className}
+          className={stylex.props(typo.mono13, s.editor).className}
           disabled={isLoading || data === undefined}
           render={<textarea spellCheck={false} />}
           {...register("config")}
